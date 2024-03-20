@@ -3,6 +3,8 @@ package kafkauniverse
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/misc"
@@ -16,7 +18,11 @@ type cluster struct {
 	logger         Logger
 }
 
-func newCluster(ctx context.Context, conf KafkaClusterRepresentation, logger Logger) (*cluster, error) {
+func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPrefix string, logger Logger) (*cluster, error) {
+	var secret = getEnvVariable(envKeyPrefix, *conf.ID)
+	if secret != nil && *secret != "" {
+		conf.Security.ClientSecret = secret
+	}
 	var saramaConfig, err = newSaramaConfig(ctx, conf, logger)
 	if err != nil {
 		return nil, err
@@ -29,6 +35,19 @@ func newCluster(ctx context.Context, conf KafkaClusterRepresentation, logger Log
 		consumerGroups: make(map[string]sarama.ConsumerGroup),
 		logger:         logger,
 	}, nil
+}
+
+func getEnvVariable(prefix string, clusterID string) *string {
+	var key = getEnvVariableName(prefix, clusterID)
+	var value = os.Getenv(key)
+	if value != "" {
+		return &value
+	}
+	return nil
+}
+
+func getEnvVariableName(prefix string, clusterID string) string {
+	return prefix + strings.ReplaceAll(strings.ToUpper(clusterID), "-", "_")
 }
 
 func newSaramaConfig(ctx context.Context, conf KafkaClusterRepresentation, logger Logger) (*sarama.Config, error) {

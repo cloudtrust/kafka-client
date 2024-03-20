@@ -77,25 +77,25 @@ func TestConsumerSimpleFunctions(t *testing.T) {
 		t.Run("Already initialized", func(t *testing.T) {
 			var consumer, _ = newConsumer(cluster, consumerConf, logger)
 			consumer.initialized = true
-			var err = consumer.initialize(nil)
+			var err = consumer.initialize()
 			assert.NotNil(t, err)
 		})
 		t.Run("Consumer disabled", func(t *testing.T) {
 			var consumer, _ = newConsumer(cluster, consumerConf, logger)
 			consumer.enabled = false
-			var err = consumer.initialize(nil)
+			var err = consumer.initialize()
 			assert.Nil(t, err)
 		})
 		t.Run("Enabled by default but incorrectly configured", func(t *testing.T) {
 			cluster.enabled = true
 			var consumer, _ = newConsumer(cluster, consumerConf, logger)
-			var err = consumer.initialize(nil)
+			var err = consumer.initialize()
 			assert.NotNil(t, err)
 		})
 		t.Run("Success", func(t *testing.T) {
 			cluster.enabled = false
 			var consumer, _ = newConsumer(cluster, consumerConf, logger)
-			var err = consumer.initialize(nil)
+			var err = consumer.initialize()
 			assert.Nil(t, err)
 		})
 	})

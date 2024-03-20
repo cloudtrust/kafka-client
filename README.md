@@ -44,16 +44,16 @@ my-kafka-key:
     topic: my.topic2
 ```
 
-## Instanciate your Kafka Universe
+## Instantiate your Kafka Universe
 
 ```
 	var kafkaUniverse *kafkauniverse.KafkaUniverse
 	{
 		var kafkaLogger = log.With(logger, "svc", "kafka")
-        var c = getViperConfiguration()
+		var c = getViperConfiguration()
 
 		var err error
-		kafkaUniverse, err = kafkauniverse.NewKafkaUniverse(ctx, kafkaLogger, func(value interface{}) error {
+		kafkaUniverse, err = kafkauniverse.NewKafkaUniverse(ctx, kafkaLogger, "ENV_", func(value interface{}) error {
 			return c.UnmarshalKey("my-kafka-key", value)
 		})
 		if err != nil {
@@ -64,6 +64,8 @@ my-kafka-key:
 	}
 	defer kafkaUniverse.Close()
 ```
+
+Note that the client secret can be replaced by an environment variable... in the previous example, ENV_ will be the prefix of the environment variable and suffix will be the cluster ID with uppercase and - replaced by _. In this example, the environment variable should be ENV_CLUSTER1.
 
 ## Initialize your producers
 
@@ -86,43 +88,43 @@ my-kafka-key:
 ## Initialize each consumer instance
 
 ```
-    // Override the default context initializer. In the following example, you can add a random UUID as a correlation ID
-    var contextInitializer = func(ctx context.Context) context.Context {
-		return context.WithValue(ctx, cs.CtContextCorrelationID, idGenerator.NextID())
-	}
+		// Override the default context initializer. In the following example, you can add a random UUID as a correlation ID
+		var contextInitializer = func(ctx context.Context) context.Context {
+			return context.WithValue(ctx, cs.CtContextCorrelationID, idGenerator.NextID())
+		}
 
-    // Add content mappers. By default, the content will be a slice of bytes containing the raw message consumed from a Kafka topic.
-    // You can add some mappers to transform it in the something more confortable to use.
-    // By default, no mapper is configured. A pre-defined mapper is available to decode the raw message from Base64: mappers.DecodeBase64Bytes
-    var mapBytesToString = func(ctx context.Context, in interface{}) (interface{}, error) {
-        return string(in.([]byte)), nil
-    }
-    var mapStringToInt = func(ctx context.Context, in interface{}) (interface{}, error) {
-        return strconv.Atoi(in.(string))
-    }
+		// Add content mappers. By default, the content will be a slice of bytes containing the raw message consumed from a Kafka topic.
+		// You can add some mappers to transform it in the something more confortable to use.
+		// By default, no mapper is configured. A pre-defined mapper is available to decode the raw message from Base64: mappers.DecodeBase64Bytes
+		var mapBytesToString = func(ctx context.Context, in interface{}) (interface{}, error) {
+			return string(in.([]byte)), nil
+		}
+		var mapStringToInt = func(ctx context.Context, in interface{}) (interface{}, error) {
+			return strconv.Atoi(in.(string))
+		}
 
-    // You have to provide an handler for each consumed message
-    var myHandler = func(ctx context.Context, message kafkauniverse.KafkaMessage) error {
-        var content = message.Content().(int)
+		// You have to provide an handler for each consumed message
+		var myHandler = func(ctx context.Context, message kafkauniverse.KafkaMessage) error {
+			var content = message.Content().(int)
 
-        // process your content
+			// process your content
 
-        // by default, the consumer is configured to "AutoCommit": you can disable this AutoCommit and confirm the message is processed like this:
-        message.Commit()
+			// by default, the consumer is configured to "AutoCommit": you can disable this AutoCommit and confirm the message is processed like this:
+			message.Commit()
 
-        // If you need to abort all processings of the current consumer, use the AbortConsuming function:
-        message.AbortConsuming()
+			// If you need to abort all processings of the current consumer, use the AbortConsuming function:
+			message.AbortConsuming()
 
-        return nil
-    }
+			return nil
+		}
 
-	kafkaUniverse.GetConsumer("consumer-id1").
-		SetContextInitializer(contextInitializer).
-		SetLogEventRate(100). // Write a message in logs every 100 consumed messages
-		AddContentMapper(mappers.DecodeBase64Bytes).
-        AddContentMapper(mapBytesToString).
-        AddContentMapper(mapStringToInt).
-		SetHandler(myHandler)
+		kafkaUniverse.GetConsumer("consumer-id1").
+			SetContextInitializer(contextInitializer).
+			SetLogEventRate(100). // Write a message in logs every 100 consumed messages
+			AddContentMapper(mappers.DecodeBase64Bytes).
+			AddContentMapper(mapBytesToString).
+			AddContentMapper(mapStringToInt).
+			SetHandler(myHandler)
 ```
 
 ## Start consumers
@@ -130,5 +132,5 @@ my-kafka-key:
 When everything is configured, you can start consuming your topics:
 
 ```
-    kafkaUniverse.StartConsumers("consumer-id1", ..., "consumer-idN")
+		kafkaUniverse.StartConsumers("consumer-id1", ..., "consumer-idN")
 ```

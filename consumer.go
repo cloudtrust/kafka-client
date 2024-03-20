@@ -70,7 +70,7 @@ func (c *consumer) Close() error {
 	return anError
 }
 
-func (c *consumer) initialize(producers map[string]*producer) error {
+func (c *consumer) initialize() error {
 	if c.initialized {
 		return fmt.Errorf("consumer %s already initialized", c.id)
 	}
@@ -84,14 +84,6 @@ func (c *consumer) initialize(producers map[string]*producer) error {
 	var err error
 	if c.consumerGroup, err = c.cluster.getConsumerGroup(c.consumerGroupName); err != nil {
 		return err
-	}
-	// Failure producer
-	if c.failureProducerName != nil {
-		var ok bool
-		if c.failureProducer, ok = producers[*c.failureProducerName]; !ok {
-			return fmt.Errorf("can't configure failure producer %s for consumer %s. check configuration and ensure producers are already initialized",
-				*c.failureProducerName, c.id)
-		}
 	}
 	// Done
 	c.initialized = true

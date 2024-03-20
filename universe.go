@@ -25,7 +25,7 @@ type Logger interface {
 type ConfigurationProvider func(target interface{}) error
 
 // NewKafkaUniverse creates a KafkaUniverse from a provided configuration
-func NewKafkaUniverse(ctx context.Context, logger Logger, confUnmarshal ConfigurationProvider) (*KafkaUniverse, error) {
+func NewKafkaUniverse(ctx context.Context, logger Logger, envKeyPrefix string, confUnmarshal ConfigurationProvider) (*KafkaUniverse, error) {
 	var clusterRepresentations = []KafkaClusterRepresentation{}
 	var err error
 	if err = confUnmarshal(&clusterRepresentations); err != nil {
@@ -47,7 +47,7 @@ func NewKafkaUniverse(ctx context.Context, logger Logger, confUnmarshal Configur
 		consumers: map[string]*consumer{},
 	}
 	for _, clusterRepresentation := range clusterRepresentations {
-		var cluster, err = newCluster(ctx, clusterRepresentation, logger)
+		var cluster, err = newCluster(ctx, clusterRepresentation, envKeyPrefix, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -75,7 +75,7 @@ func NewKafkaUniverse(ctx context.Context, logger Logger, confUnmarshal Configur
 	return &res, nil
 }
 
-// Close releases all instanciated resources
+// Close releases all instantiated resources
 func (ku *KafkaUniverse) Close() error {
 	var anError error
 	for _, consumer := range ku.consumers {
@@ -114,7 +114,7 @@ func (ku *KafkaUniverse) InitializeProducers(producerIDs ...string) error {
 func (ku *KafkaUniverse) InitializeConsumers(consumerIDs ...string) error {
 	for _, consumerID := range consumerIDs {
 		if consumer, ok := ku.consumers[consumerID]; ok {
-			if err := consumer.initialize(ku.producers); err != nil {
+			if err := consumer.initialize(); err != nil {
 				return err
 			}
 		} else {

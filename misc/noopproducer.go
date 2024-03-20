@@ -18,29 +18,29 @@ func (n *NoopKafkaProducer) SendMessages(msgs []*sarama.ProducerMessage) error {
 // Close does noop
 func (n *NoopKafkaProducer) Close() error { return nil }
 
-// noop
+// TxnStatus does noop
 func (n *NoopKafkaProducer) TxnStatus() sarama.ProducerTxnStatusFlag {
 	return 0
 }
 
-// noop
+// IsTransactional does noop
 func (n *NoopKafkaProducer) IsTransactional() bool { return true }
 
-// noop
+// BeginTxn does noop
 func (n *NoopKafkaProducer) BeginTxn() error { return nil }
 
-// noop
+// CommitTxn does noop
 func (n *NoopKafkaProducer) CommitTxn() error { return nil }
 
-// noop
+// AbortTxn does noop
 func (n *NoopKafkaProducer) AbortTxn() error { return nil }
 
-// noop
-func (n *NoopKafkaProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupId string) error {
+// AddOffsetsToTxn does noop
+func (n *NoopKafkaProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupID string) error {
 	return nil
 }
 
-// noop
-func (n *NoopKafkaProducer) AddMessageToTxn(msg *sarama.ConsumerMessage, groupId string, metadata *string) error {
+// AddMessageToTxn does noop
+func (n *NoopKafkaProducer) AddMessageToTxn(msg *sarama.ConsumerMessage, groupID string, metadata *string) error {
 	return nil
 }

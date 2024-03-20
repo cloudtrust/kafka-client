@@ -9,8 +9,9 @@ import (
 )
 
 // InfoLogger is a basic logger function
-type InfoLogger func(ctx context.Context, keyvals ...interface{})
+type InfoLogger func(ctx context.Context, keyvals ...any)
 
+// NewSaramaLogger creates a Sarama logger
 func NewSaramaLogger(logger InfoLogger, enabled bool) sarama.StdLogger {
 	if enabled {
 		return log.New(&loggerWrapper{logger: logger}, "[Sarama] ", log.LstdFlags)
@@ -19,7 +20,7 @@ func NewSaramaLogger(logger InfoLogger, enabled bool) sarama.StdLogger {
 }
 
 type loggerWrapper struct {
-	logger func(ctx context.Context, keyvals ...interface{})
+	logger func(ctx context.Context, keyvals ...any)
 }
 
 func (c *loggerWrapper) Write(p []byte) (n int, err error) {

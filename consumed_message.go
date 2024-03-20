@@ -8,7 +8,7 @@ import (
 
 // KafkaMessage interface
 type KafkaMessage interface {
-	GetContent() interface{}
+	GetContent() any
 	GetOffset() int64
 	Commit()
 	CommitWithMessage(message string)
@@ -18,14 +18,14 @@ type KafkaMessage interface {
 
 type consumedMessage struct {
 	msg      *sarama.ConsumerMessage
-	content  interface{}
+	content  any
 	consumer *consumer
 	session  sarama.ConsumerGroupSession
 	abort    bool
 }
 
 // GetContent returns the content of the consumed message. Mappers have already been applied to the original received content.
-func (cm *consumedMessage) GetContent() interface{} {
+func (cm *consumedMessage) GetContent() any {
 	return cm.content
 }
 

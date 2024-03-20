@@ -53,19 +53,19 @@ my-kafka-key:
 		var c = getViperConfiguration()
 
 		var err error
-		kafkaUniverse, err = kafkauniverse.NewKafkaUniverse(ctx, kafkaLogger, "ENV_", func(value interface{}) error {
+		kafkaUniverse, err = kafkauniverse.NewKafkaUniverse(ctx, kafkaLogger, "ENV_", func(value any) error {
 			return c.UnmarshalKey("my-kafka-key", value)
 		})
 		if err != nil {
 			kafkaLogger.Error(ctx, "msg", "could not configure Kafka", "err", err)
 			return
 		}
-		logger.Info(ctx, "msg", "Kafka configuration loaded", "obj", *kafkaUniverse)
+		logger.Info(ctx, "msg", "Kafka configuration loaded")
 	}
 	defer kafkaUniverse.Close()
 ```
 
-Note that the client secret can be replaced by an environment variable... in the previous example, ENV_ will be the prefix of the environment variable and suffix will be the cluster ID with uppercase and - replaced by _. In this example, the environment variable should be ENV_CLUSTER1.
+Note that the client secret can be replaced by an environment variable... in the previous example, ENV_ will be the prefix of the environment variable, the cluster ID with uppercase and - replaced by _, and a suffix _CLIENT_SECRET. In this example, the environment variable should be ENV_CLUSTER1_CLIENT_SECRET.
 
 ## Initialize your producers
 
@@ -96,10 +96,10 @@ Note that the client secret can be replaced by an environment variable... in the
 		// Add content mappers. By default, the content will be a slice of bytes containing the raw message consumed from a Kafka topic.
 		// You can add some mappers to transform it in the something more confortable to use.
 		// By default, no mapper is configured. A pre-defined mapper is available to decode the raw message from Base64: mappers.DecodeBase64Bytes
-		var mapBytesToString = func(ctx context.Context, in interface{}) (interface{}, error) {
+		var mapBytesToString = func(ctx context.Context, in any) (any, error) {
 			return string(in.([]byte)), nil
 		}
-		var mapStringToInt = func(ctx context.Context, in interface{}) (interface{}, error) {
+		var mapStringToInt = func(ctx context.Context, in any) (any, error) {
 			return strconv.Atoi(in.(string))
 		}
 

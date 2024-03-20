@@ -15,14 +15,14 @@ type KafkaUniverse struct {
 
 // Logger interface for logging with level
 type Logger interface {
-	Debug(ctx context.Context, keyvals ...interface{})
-	Info(ctx context.Context, keyvals ...interface{})
-	Warn(ctx context.Context, keyvals ...interface{})
-	Error(ctx context.Context, keyvals ...interface{})
+	Debug(ctx context.Context, keyvals ...any)
+	Info(ctx context.Context, keyvals ...any)
+	Warn(ctx context.Context, keyvals ...any)
+	Error(ctx context.Context, keyvals ...any)
 }
 
 // ConfigurationProvider interface
-type ConfigurationProvider func(target interface{}) error
+type ConfigurationProvider func(target any) error
 
 // NewKafkaUniverse creates a KafkaUniverse from a provided configuration
 func NewKafkaUniverse(ctx context.Context, logger Logger, envKeyPrefix string, confUnmarshal ConfigurationProvider) (*KafkaUniverse, error) {
@@ -122,6 +122,11 @@ func (ku *KafkaUniverse) InitializeConsumers(consumerIDs ...string) error {
 		}
 	}
 	return nil
+}
+
+// GetProducer gets the specified producer
+func (ku *KafkaUniverse) GetProducer(producerID string) *producer {
+	return ku.producers[producerID]
 }
 
 // GetConsumer gets the specified consumer

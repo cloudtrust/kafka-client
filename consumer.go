@@ -13,7 +13,10 @@ import (
 // KafkaMessageHandler interface shall be implemented by clients
 type KafkaMessageHandler func(context.Context, KafkaMessage) error
 
-type KafkaMessageMapper func(context.Context, interface{}) (interface{}, error)
+// KafkaMessageMapper function type
+type KafkaMessageMapper func(context.Context, any) (any, error)
+
+// KafkaContextInitializer function type
 type KafkaContextInitializer func(context.Context) context.Context
 
 type consumer struct {
@@ -119,7 +122,11 @@ func (c *consumer) SetAutoCommit(enabled bool) {
 func (c *consumer) Go() {
 	if c.initialized && c.enabled {
 		go func() {
-			c.logger.Info(context.Background(), "msg", "Just started thread to consume queue", "topic", c.topic, "failure-topic", *c.failureProducerName)
+			var failureTopic = "none"
+			if c.failureProducerName != nil {
+				failureTopic = *c.failureProducerName
+			}
+			c.logger.Info(context.Background(), "msg", "Just started thread to consume queue", "topic", c.topic, "failure-topic", failureTopic)
 			for {
 				c.consumerGroup.Consume(context.Background(), []string{c.topic}, c)
 				select {
@@ -133,8 +140,8 @@ func (c *consumer) Go() {
 	}
 }
 
-func (c *consumer) applyMappers(ctx context.Context, kafkaMsg *sarama.ConsumerMessage) (interface{}, error) {
-	var content interface{} = kafkaMsg.Value
+func (c *consumer) applyMappers(ctx context.Context, kafkaMsg *sarama.ConsumerMessage) (any, error) {
+	var content any = kafkaMsg.Value
 	for idx, mapper := range c.mappers {
 		var err error
 		if content, err = mapper(ctx, content); err != nil {
@@ -171,7 +178,7 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		} else {
 			err = c.handler(ctx, msg)
 			if err != nil {
-				c.logger.Error(ctx, "msg", "Failed to persist event", "err", err.Error(), "topic", claim.Topic())
+				c.logger.Error(ctx, "msg", "Failed to handle event", "err", err.Error(), "topic", claim.Topic())
 				if msg.abort {
 					return err
 				}

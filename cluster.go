@@ -19,8 +19,8 @@ type cluster struct {
 }
 
 func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPrefix string, logger Logger) (*cluster, error) {
-	var secret = getEnvVariable(envKeyPrefix, *conf.ID)
-	if secret != nil && *secret != "" {
+	var secret = getEnvVariable(envKeyPrefix, *conf.ID, "_CLIENT_SECRET")
+	if secret != nil {
 		conf.Security.ClientSecret = secret
 	}
 	var saramaConfig, err = newSaramaConfig(ctx, conf, logger)
@@ -37,8 +37,8 @@ func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPref
 	}, nil
 }
 
-func getEnvVariable(prefix string, clusterID string) *string {
-	var key = getEnvVariableName(prefix, clusterID)
+func getEnvVariable(prefix string, clusterID string, suffix string) *string {
+	var key = prefix + getEnvVariableName(clusterID) + suffix
 	var value = os.Getenv(key)
 	if value != "" {
 		return &value
@@ -46,8 +46,8 @@ func getEnvVariable(prefix string, clusterID string) *string {
 	return nil
 }
 
-func getEnvVariableName(prefix string, clusterID string) string {
-	return prefix + strings.ReplaceAll(strings.ToUpper(clusterID), "-", "_")
+func getEnvVariableName(clusterID string) string {
+	return strings.ReplaceAll(strings.ToUpper(clusterID), "-", "_")
 }
 
 func newSaramaConfig(ctx context.Context, conf KafkaClusterRepresentation, logger Logger) (*sarama.Config, error) {

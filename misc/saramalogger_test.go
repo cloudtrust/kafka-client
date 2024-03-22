@@ -9,7 +9,7 @@ import (
 
 func TestWrite(t *testing.T) {
 	var message = "test"
-	var loggerFunc = func(ctx context.Context, keyvals ...interface{}) {
+	var loggerFunc = func(ctx context.Context, keyvals ...any) {
 		assert.NotNil(t, ctx)
 		assert.Equal(t, "msg", keyvals[0])
 		assert.Contains(t, keyvals[1], "[Sarama] ")

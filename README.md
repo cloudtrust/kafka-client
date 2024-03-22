@@ -53,7 +53,7 @@ my-kafka-key:
 		var c = getViperConfiguration()
 
 		var err error
-		kafkaUniverse, err = kafkauniverse.NewKafkaUniverse(ctx, kafkaLogger, "ENV_", func(value interface{}) error {
+		kafkaUniverse, err = kafkauniverse.NewKafkaUniverse(ctx, kafkaLogger, "ENV_", func(value any) error {
 			return c.UnmarshalKey("my-kafka-key", value)
 		})
 		if err != nil {
@@ -96,10 +96,10 @@ Note that the client secret can be replaced by an environment variable... in the
 		// Add content mappers. By default, the content will be a slice of bytes containing the raw message consumed from a Kafka topic.
 		// You can add some mappers to transform it in the something more confortable to use.
 		// By default, no mapper is configured. A pre-defined mapper is available to decode the raw message from Base64: mappers.DecodeBase64Bytes
-		var mapBytesToString = func(ctx context.Context, in interface{}) (interface{}, error) {
+		var mapBytesToString = func(ctx context.Context, in any) (any, error) {
 			return string(in.([]byte)), nil
 		}
-		var mapStringToInt = func(ctx context.Context, in interface{}) (interface{}, error) {
+		var mapStringToInt = func(ctx context.Context, in any) (any, error) {
 			return strconv.Atoi(in.(string))
 		}
 

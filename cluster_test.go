@@ -7,6 +7,6 @@ import (
 )
 
 func TestGetEnvVariable(t *testing.T) {
-	assert.Equal(t, "PATH_TO_VARIABLE2", getEnvVariableName("PATH_", "to-variable2"))
-	assert.NotNil(t, getEnvVariable("PA", "th")) // will match env variable PATH
+	assert.Equal(t, "TO_VARIABLE2", getEnvVariableName("to-variable2"))
+	assert.NotNil(t, getEnvVariable("PA", "t", "H")) // will match env variable PATH
 }

@@ -52,7 +52,7 @@ func (p *producer) initialize() error {
 	}
 	var err error
 	if p.producer, err = sarama.NewSyncProducer(p.cluster.brokers, p.cluster.saramaConfig); err != nil {
-		p.logger.Error(context.Background(), "msg", "Failed to start Kafka producer", "err", err)
+		p.logger.Error(context.Background(), "msg", "Failed to initialize Kafka producer", "err", err)
 		return err
 	}
 	p.initialized = true

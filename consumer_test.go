@@ -167,7 +167,7 @@ func TestConsumeClaim(t *testing.T) {
 		var content = 345
 		fillMessageChannel(messages, strconv.Itoa(content), "invalid")
 		var handlerError = errors.New("error from handler")
-		consumer.AddContentMapper(func(ctx context.Context, in any) (any, error) {
+		consumer.AddContentMapper(func(ctx context.Context, messageOffset int64, in any) (any, error) {
 			return strconv.Atoi(string(in.([]byte)))
 		})
 		consumer.SetHandler(func(ctx context.Context, msg KafkaMessage) error {

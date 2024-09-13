@@ -6,7 +6,7 @@ import (
 )
 
 // DecodeBase64Bytes is a mapper to convert a content from base64
-func DecodeBase64Bytes(ctx context.Context, in any) (any, error) {
+func DecodeBase64Bytes(ctx context.Context, messageOffset int64, in any) (any, error) {
 	var bytes = in.([]byte)
 	return base64.StdEncoding.DecodeString(string(bytes))
 }

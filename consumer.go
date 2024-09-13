@@ -14,7 +14,7 @@ import (
 type KafkaMessageHandler func(context.Context, KafkaMessage) error
 
 // KafkaMessageMapper function type
-type KafkaMessageMapper func(context.Context, any) (any, error)
+type KafkaMessageMapper func(ctx context.Context, messageOffset int64, in any) (any, error)
 
 // KafkaContextInitializer function type
 type KafkaContextInitializer func(context.Context) context.Context
@@ -144,7 +144,7 @@ func (c *consumer) applyMappers(ctx context.Context, kafkaMsg *sarama.ConsumerMe
 	var content any = kafkaMsg.Value
 	for idx, mapper := range c.mappers {
 		var err error
-		if content, err = mapper(ctx, content); err != nil {
+		if content, err = mapper(ctx, kafkaMsg.Offset, content); err != nil {
 			logMsg := fmt.Sprintf("Mapper #%d failed to map content", idx+1)
 			c.logger.Error(ctx, "msg", logMsg, "err", err, "topic", c.topic, "offset", kafkaMsg.Offset,
 				"partition", kafkaMsg.Partition, "contentLength", len(kafkaMsg.Value))

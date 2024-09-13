@@ -11,12 +11,12 @@ func TestDecodeBase64Bytes(t *testing.T) {
 	var ctx = context.TODO()
 
 	t.Run("Success", func(t *testing.T) {
-		var res, err = DecodeBase64Bytes(ctx, []byte("VGVzdCBvZiB0aGUgZnVuY3Rpb24="))
+		var res, err = DecodeBase64Bytes(ctx, 0, []byte("VGVzdCBvZiB0aGUgZnVuY3Rpb24="))
 		assert.Nil(t, err)
 		assert.Equal(t, "Test of the function", string(res.([]byte)))
 	})
 	t.Run("Failure", func(t *testing.T) {
-		var _, err = DecodeBase64Bytes(ctx, []byte("ey"))
+		var _, err = DecodeBase64Bytes(ctx, 0, []byte("ey"))
 		assert.NotNil(t, err)
 	})
 }

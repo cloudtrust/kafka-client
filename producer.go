@@ -68,3 +68,13 @@ func (p *producer) SendMessageBytes(content []byte) error {
 	var _, _, err = p.producer.SendMessage(msg)
 	return err
 }
+
+// SendPartitionedMessageBytes sends a message in the producer topic
+func (p *producer) SendPartitionedMessageBytes(partitionKey string, content []byte) error {
+	if !p.enabled {
+		return nil
+	}
+	msg := &sarama.ProducerMessage{Topic: *p.topic, Key: sarama.StringEncoder(partitionKey), Value: sarama.StringEncoder(content)}
+	var _, _, err = p.producer.SendMessage(msg)
+	return err
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/misc"
@@ -28,6 +29,7 @@ type consumer struct {
 	consumerGroupName   string
 	failureProducerName *string
 	failureProducer     *producer
+	consumptionDelay    *time.Duration
 	consumerGroup       sarama.ConsumerGroup
 	mappers             []KafkaMessageMapper
 	autoCommit          bool
@@ -51,6 +53,7 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 		consumerGroupName:   *consumerRep.ConsumerGroupName,
 		failureProducerName: consumerRep.FailureProducer,
 		failureProducer:     nil,
+		consumptionDelay:    consumerRep.ConsumptionDelay,
 		consumerGroup:       nil,
 		mappers:             nil,
 		autoCommit:          true,
@@ -166,6 +169,16 @@ func (c *consumer) Cleanup(session sarama.ConsumerGroupSession) error {
 func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for kafkaMsg := range claim.Messages() {
 		ctx := c.contextInit(context.Background())
+
+		if c.consumptionDelay != nil {
+			sinceMessageProduction := time.Since(kafkaMsg.Timestamp)
+			if sinceMessageProduction < *c.consumptionDelay {
+				pauseDuration := *c.consumptionDelay - sinceMessageProduction
+				c.logger.Info(ctx, "msg", "pause consumption because of consumption delay", "pauseDuration", pauseDuration, "consumptionDelay", *c.consumptionDelay, "consumerGroupName", c.consumerGroupName)
+				time.Sleep(pauseDuration)
+			}
+		}
+
 		var content, err = c.applyMappers(ctx, kafkaMsg)
 		var msg = &consumedMessage{
 			msg:      kafkaMsg,

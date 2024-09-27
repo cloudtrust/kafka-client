@@ -1,6 +1,9 @@
 package kafkauniverse
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 // KafkaClusterRepresentation struct
 type KafkaClusterRepresentation struct {
@@ -31,11 +34,12 @@ type KafkaProducerRepresentation struct {
 
 // KafkaConsumerRepresentation struct
 type KafkaConsumerRepresentation struct {
-	ID                *string `mapstructure:"id"`
-	Enabled           *bool   `mapstructure:"enabled"`
-	Topic             *string `mapstructure:"topic"`
-	ConsumerGroupName *string `mapstructure:"consumer-group-name"`
-	FailureProducer   *string `mapstructure:"failure-producer"`
+	ID                *string        `mapstructure:"id"`
+	Enabled           *bool          `mapstructure:"enabled"`
+	Topic             *string        `mapstructure:"topic"`
+	ConsumerGroupName *string        `mapstructure:"consumer-group-name"`
+	FailureProducer   *string        `mapstructure:"failure-producer"`
+	ConsumptionDelay  *time.Duration `mapstructure:"consumption-delay"`
 }
 
 // Validate validates a KafkaClusterRepresentation instance

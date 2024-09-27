@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/mock"
@@ -113,7 +114,8 @@ func fillMessageChannel(messages chan *sarama.ConsumerMessage, values ...string)
 	go func() {
 		for _, value := range values {
 			messages <- &sarama.ConsumerMessage{
-				Value: []byte(value),
+				Timestamp: time.Now(),
+				Value:     []byte(value),
 			}
 		}
 		close(messages)
@@ -183,4 +185,35 @@ func TestConsumeClaim(t *testing.T) {
 		var err = consumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
 		assert.Nil(t, err)
 	})
+}
+
+func TestConsumeClaimWithDelay(t *testing.T) {
+	var mockCtrl = gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	var mockConsumerGroupSession = mock.NewConsumerGroupSession(mockCtrl)
+	var mockConsumerGroupClaim = mock.NewConsumerGroupClaim(mockCtrl)
+
+	var logger = mock.NewLogger(mockCtrl)
+	logger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
+	logger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
+	var cluster = &cluster{
+		logger: logger,
+	}
+
+	delay, _ := time.ParseDuration("1ms")
+	var consumerConf = createDefaultConsumerConfiguration()
+	consumerConf.ConsumptionDelay = &delay
+	var consumer, _ = newConsumer(cluster, consumerConf, logger)
+	consumer.SetHandler(func(ctx context.Context, msg KafkaMessage) error {
+		return nil
+	})
+
+	var messages = make(chan *sarama.ConsumerMessage)
+	fillMessageChannel(messages, "message")
+	mockConsumerGroupClaim.EXPECT().Messages().Return(messages)
+	mockConsumerGroupClaim.EXPECT().Topic().Return("topic")
+	mockConsumerGroupSession.EXPECT().MarkMessage(gomock.Any(), "")
+	var err = consumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
+	assert.Nil(t, err)
 }

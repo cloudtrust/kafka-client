@@ -2,8 +2,6 @@ module github.com/cloudtrust/kafka-client
 
 go 1.22
 
-toolchain go1.22.0
-
 require (
 	github.com/IBM/sarama v1.43.0
 	github.com/golang/mock v1.6.0

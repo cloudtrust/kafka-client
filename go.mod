@@ -4,8 +4,8 @@ go 1.22
 
 require (
 	github.com/IBM/sarama v1.43.0
-	github.com/golang/mock v1.6.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
+	go.uber.org/mock v0.5.0
 	golang.org/x/oauth2 v0.18.0
 )
 

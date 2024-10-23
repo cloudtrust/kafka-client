@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/cloudtrust/kafka-client/misc/mock"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"golang.org/x/oauth2"
 )
 

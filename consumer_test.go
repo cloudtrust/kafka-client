@@ -9,8 +9,8 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/mock"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 type contextKey int

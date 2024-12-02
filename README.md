@@ -128,7 +128,6 @@ Note that the client secret can be replaced by an environment variable... in the
 ```
 
 ## Start consumers
-
 When everything is configured, you can start consuming your topics:
 
 ```

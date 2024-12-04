@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/misc"
+	"github.com/google/uuid"
 )
 
 // KafkaMessageHandler interface shall be implemented by clients
@@ -44,13 +46,19 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 	if !cluster.enabled || (consumerRep.Enabled != nil && !*consumerRep.Enabled) {
 		enabled = false
 	}
+
+	groupName := *consumerRep.ConsumerGroupName
+
+	// Replace <UUID> in groupName with a random UUID
+	groupName = strings.Replace(groupName, "<UUID>", uuid.New().String(), 1)
+
 	return &consumer{
 		initialized:         false,
 		cluster:             cluster,
 		id:                  *consumerRep.ID,
 		enabled:             enabled,
 		topic:               *consumerRep.Topic,
-		consumerGroupName:   *consumerRep.ConsumerGroupName,
+		consumerGroupName:   groupName,
 		failureProducerName: consumerRep.FailureProducer,
 		failureProducer:     nil,
 		consumptionDelay:    consumerRep.ConsumptionDelay,

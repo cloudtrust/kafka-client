@@ -28,6 +28,9 @@ my-kafka-key:
     topic: my.consumed.topic1
     consumer-group-name: consumer-group1
     failure-producer: producer-id2
+  - id: consumer-id2
+	topic: my.consumed.topic2
+    consumer-group-name: <UUID> # <UUID> will be replaced by a real UUID when the consumer is created
 - id: cluster2
   enabled: true
   version: "3.1.0"

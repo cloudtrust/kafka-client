@@ -8,6 +8,12 @@ import (
 	"github.com/cloudtrust/kafka-client/misc"
 )
 
+type Producer interface {
+	SendMessageBytes(content []byte) error
+	SendPartitionedMessageBytes(partitionKey string, content []byte) error
+	Close() error
+}
+
 type producer struct {
 	initialized bool
 	cluster     *cluster

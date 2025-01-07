@@ -192,6 +192,7 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 			msg:      kafkaMsg,
 			content:  content,
 			consumer: c,
+			session:  session,
 			abort:    false,
 		}
 		if err != nil {

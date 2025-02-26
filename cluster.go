@@ -23,10 +23,14 @@ func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPref
 	if secret != nil {
 		conf.Security.ClientSecret = secret
 	}
+
 	var saramaConfig, err = newSaramaConfig(ctx, conf, logger)
 	if err != nil {
 		return nil, err
 	}
+
+	sarama.Logger = misc.NewSaramaLogger(logger.Info, *conf.SaramaLogEnabled)
+
 	var enabled = conf.Enabled == nil || *conf.Enabled
 	return &cluster{
 		enabled:        enabled,

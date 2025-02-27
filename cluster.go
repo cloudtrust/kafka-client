@@ -29,7 +29,9 @@ func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPref
 		return nil, err
 	}
 
-	sarama.Logger = misc.NewSaramaLogger(logger.Info, *conf.SaramaLogEnabled)
+	if conf.SaramaLogEnabled != nil {
+		sarama.Logger = misc.NewSaramaLogger(logger.Info, *conf.SaramaLogEnabled)
+	}
 
 	var enabled = conf.Enabled == nil || *conf.Enabled
 	return &cluster{

@@ -1,6 +1,6 @@
 module github.com/cloudtrust/kafka-client
 
-go 1.23.1
+go 1.24.1
 
 require (
 	github.com/IBM/sarama v1.45.1

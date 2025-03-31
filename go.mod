@@ -1,13 +1,13 @@
 module github.com/cloudtrust/kafka-client
 
-go 1.22
+go 1.24.1
 
 require (
 	github.com/IBM/sarama v1.45.1
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.28.0
 )
 
 require (

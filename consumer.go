@@ -54,8 +54,12 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 	groupName = strings.Replace(groupName, "<UUID>", uuid.New().String(), 1)
 
 	var initialOffset = sarama.OffsetOldest
-	if consumerRep.InitialOffset != nil && *consumerRep.InitialOffset == "newest" {
-		initialOffset = sarama.OffsetNewest
+	if consumerRep.InitialOffset != nil {
+		if *consumerRep.InitialOffset == "newest" {
+			initialOffset = sarama.OffsetNewest
+		} else if *consumerRep.InitialOffset == "oldest" {
+			initialOffset = sarama.OffsetOldest
+		}
 	}
 
 	return &consumer{
@@ -107,6 +111,10 @@ func (c *consumer) initialize() error {
 	if c.initialOffset == sarama.OffsetNewest {
 		copy := *c.cluster.saramaConfig
 		copy.Consumer.Offsets.Initial = sarama.OffsetNewest
+		config = &copy
+	} else if c.initialOffset == sarama.OffsetOldest {
+		copy := *c.cluster.saramaConfig
+		copy.Consumer.Offsets.Initial = sarama.OffsetOldest
 		config = &copy
 	}
 

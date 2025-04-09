@@ -54,7 +54,7 @@ func TestValidateCluster(t *testing.T) {
 
 	var emptyString = ptrString("")
 	var invalidCases []KafkaClusterRepresentation
-	for range 32 {
+	for range 36 {
 		invalidCases = append(invalidCases, createValidKafkaClusterRepresentation())
 	}
 	invalidCases[0].ID = nil
@@ -83,31 +83,21 @@ func TestValidateCluster(t *testing.T) {
 	invalidCases[22].Consumers[0].ConsumerGroupName = nil
 	invalidCases[23].Consumers[0].ConsumerGroupName = emptyString
 	invalidCases[24].Consumers[0].FailureProducer = emptyString
-	invalidCases[25].Consumers[1].ID = nil
-	invalidCases[26].Consumers[1].ID = emptyString
-	invalidCases[27].Consumers[1].Topic = nil
-	invalidCases[28].Consumers[1].Topic = emptyString
-	invalidCases[29].Consumers[1].ConsumerGroupName = nil
-	invalidCases[30].Consumers[1].ConsumerGroupName = emptyString
-	invalidCases[31].Consumers[1].FailureProducer = emptyString
+	invalidCases[25].Consumers[0].InitialOffset = ptrString("not oldest nor newest")
+	invalidCases[26].Consumers[0].InitialOffset = emptyString
+	invalidCases[27].Consumers[1].ID = nil
+	invalidCases[28].Consumers[1].ID = emptyString
+	invalidCases[29].Consumers[1].Topic = nil
+	invalidCases[30].Consumers[1].Topic = emptyString
+	invalidCases[31].Consumers[1].ConsumerGroupName = nil
+	invalidCases[32].Consumers[1].ConsumerGroupName = emptyString
+	invalidCases[33].Consumers[1].FailureProducer = emptyString
+	invalidCases[34].Consumers[1].InitialOffset = ptrString("not oldest nor newest")
+	invalidCases[35].Consumers[0].InitialOffset = emptyString
 
 	for idx, value := range invalidCases {
 		t.Run(fmt.Sprintf("Invalid case #%d", idx), func(t *testing.T) {
 			assert.NotNil(t, value.Validate())
-		})
-	}
-
-	var offsetCases []KafkaClusterRepresentation
-	for range 4 {
-		offsetCases = append(offsetCases, createValidKafkaClusterRepresentation())
-	}
-	offsetCases[0].Consumers[0].InitialOffset = nil
-	offsetCases[1].Consumers[0].InitialOffset = emptyString
-	offsetCases[2].Consumers[1].InitialOffset = nil
-	offsetCases[3].Consumers[1].InitialOffset = emptyString
-	for idx, value := range offsetCases {
-		t.Run(fmt.Sprintf("Offset case #%d", idx), func(t *testing.T) {
-			assert.Nil(t, value.Validate())
 		})
 	}
 

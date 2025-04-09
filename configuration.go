@@ -122,5 +122,9 @@ func (kcr *KafkaConsumerRepresentation) Validate() error {
 	if kcr.FailureProducer != nil && *kcr.FailureProducer == "" {
 		return errors.New("consumer failure producer is optional but should not be empty")
 	}
+	if kcr.InitialOffset != nil && !(*kcr.InitialOffset == "oldest" || *kcr.InitialOffset == "newest") {
+		return errors.New("consumer initial offset is optional but should be either 'oldest' or 'newest'")
+	}
+
 	return nil
 }

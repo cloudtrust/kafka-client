@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+const (
+	offsetNewestParam = "newest"
+	offsetOldestParam = "oldest"
+)
+
 // KafkaClusterRepresentation struct
 type KafkaClusterRepresentation struct {
 	ID               *string                       `mapstructure:"id"`
@@ -40,6 +45,7 @@ type KafkaConsumerRepresentation struct {
 	ConsumerGroupName *string        `mapstructure:"consumer-group-name"`
 	FailureProducer   *string        `mapstructure:"failure-producer"`
 	ConsumptionDelay  *time.Duration `mapstructure:"consumption-delay"`
+	InitialOffset     *string        `mapstructure:"initial-offset"`
 }
 
 // Validate validates a KafkaClusterRepresentation instance
@@ -121,5 +127,9 @@ func (kcr *KafkaConsumerRepresentation) Validate() error {
 	if kcr.FailureProducer != nil && *kcr.FailureProducer == "" {
 		return errors.New("consumer failure producer is optional but should not be empty")
 	}
+	if kcr.InitialOffset != nil && !(*kcr.InitialOffset == offsetOldestParam || *kcr.InitialOffset == offsetNewestParam) {
+		return errors.New("consumer initial offset is optional but should be either 'oldest' or 'newest'")
+	}
+
 	return nil
 }

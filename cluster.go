@@ -89,7 +89,7 @@ func (c *cluster) Close() error {
 	return anError
 }
 
-func (c *cluster) getConsumerGroup(consumerGroupName string) (sarama.ConsumerGroup, error) {
+func (c *cluster) getConsumerGroup(consumerGroupName string, groupConfig sarama.Config) (sarama.ConsumerGroup, error) {
 	if !c.enabled {
 		return &misc.NoopKafkaConsumerGroup{}, nil
 	}
@@ -97,7 +97,7 @@ func (c *cluster) getConsumerGroup(consumerGroupName string) (sarama.ConsumerGro
 		return cg, nil
 	}
 
-	consumer, err := sarama.NewConsumerGroup(c.brokers, consumerGroupName, c.saramaConfig)
+	consumer, err := sarama.NewConsumerGroup(c.brokers, consumerGroupName, &groupConfig)
 	if err != nil {
 		c.logger.Warn(context.Background(), "msg", "Failed to create consumer group", "group", consumerGroupName, "err", err)
 		return nil, err

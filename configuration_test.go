@@ -32,8 +32,17 @@ func createValidKafkaClusterRepresentation() KafkaClusterRepresentation {
 				ID:                ptrString("consumer-1"),
 				Enabled:           ptrBool(true),
 				Topic:             ptrString("topic-consumer-1"),
-				ConsumerGroupName: ptrString("consumer-group"),
+				ConsumerGroupName: ptrString("consumer-group-1"),
 				FailureProducer:   ptrString("producer-1"),
+				InitialOffset:     nil,
+			},
+			{
+				ID:                ptrString("consumer-2"),
+				Enabled:           ptrBool(true),
+				Topic:             ptrString("topic-consumer-2"),
+				ConsumerGroupName: ptrString("consumer-group-2"),
+				FailureProducer:   ptrString("producer-1"),
+				InitialOffset:     ptrString("newest"),
 			},
 		},
 	}
@@ -45,7 +54,7 @@ func TestValidateCluster(t *testing.T) {
 
 	var emptyString = ptrString("")
 	var invalidCases []KafkaClusterRepresentation
-	for i := 0; i < 25; i++ {
+	for range 36 {
 		invalidCases = append(invalidCases, createValidKafkaClusterRepresentation())
 	}
 	invalidCases[0].ID = nil
@@ -74,10 +83,22 @@ func TestValidateCluster(t *testing.T) {
 	invalidCases[22].Consumers[0].ConsumerGroupName = nil
 	invalidCases[23].Consumers[0].ConsumerGroupName = emptyString
 	invalidCases[24].Consumers[0].FailureProducer = emptyString
+	invalidCases[25].Consumers[0].InitialOffset = ptrString("not oldest nor newest")
+	invalidCases[26].Consumers[0].InitialOffset = emptyString
+	invalidCases[27].Consumers[1].ID = nil
+	invalidCases[28].Consumers[1].ID = emptyString
+	invalidCases[29].Consumers[1].Topic = nil
+	invalidCases[30].Consumers[1].Topic = emptyString
+	invalidCases[31].Consumers[1].ConsumerGroupName = nil
+	invalidCases[32].Consumers[1].ConsumerGroupName = emptyString
+	invalidCases[33].Consumers[1].FailureProducer = emptyString
+	invalidCases[34].Consumers[1].InitialOffset = ptrString("not oldest nor newest")
+	invalidCases[35].Consumers[0].InitialOffset = emptyString
 
 	for idx, value := range invalidCases {
 		t.Run(fmt.Sprintf("Invalid case #%d", idx), func(t *testing.T) {
 			assert.NotNil(t, value.Validate())
 		})
 	}
+
 }

@@ -39,6 +39,7 @@ type consumer struct {
 	contextInit         KafkaContextInitializer
 	logger              Logger
 	logEventRate        int64
+	initialOffset       int64
 }
 
 func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logger Logger) (*consumer, error) {
@@ -51,6 +52,15 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 
 	// Replace <UUID> in groupName with a random UUID
 	groupName = strings.Replace(groupName, "<UUID>", uuid.New().String(), 1)
+
+	var initialOffset = sarama.OffsetOldest
+	if consumerRep.InitialOffset != nil {
+		if *consumerRep.InitialOffset == offsetNewestParam {
+			initialOffset = sarama.OffsetNewest
+		} else if *consumerRep.InitialOffset == offsetOldestParam {
+			initialOffset = sarama.OffsetOldest
+		}
+	}
 
 	return &consumer{
 		initialized:         false,
@@ -69,6 +79,7 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 		contextInit:         func(ctx context.Context) context.Context { return ctx },
 		logger:              logger,
 		logEventRate:        1000,
+		initialOffset:       initialOffset,
 	}, nil
 }
 
@@ -94,9 +105,17 @@ func (c *consumer) initialize() error {
 		c.initialized = true
 		return nil
 	}
+
+	groupConfig := *c.cluster.saramaConfig
+	if c.initialOffset == sarama.OffsetNewest {
+		groupConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
+	} else if c.initialOffset == sarama.OffsetOldest {
+		groupConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
+	}
+
 	// Consumer group
 	var err error
-	if c.consumerGroup, err = c.cluster.getConsumerGroup(c.consumerGroupName); err != nil {
+	if c.consumerGroup, err = c.cluster.getConsumerGroup(c.consumerGroupName, groupConfig); err != nil {
 		return err
 	}
 	// Done

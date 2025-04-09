@@ -40,6 +40,7 @@ type KafkaConsumerRepresentation struct {
 	ConsumerGroupName *string        `mapstructure:"consumer-group-name"`
 	FailureProducer   *string        `mapstructure:"failure-producer"`
 	ConsumptionDelay  *time.Duration `mapstructure:"consumption-delay"`
+	InitialOffset     *string        `mapstructure:"initial-offset"`
 }
 
 // Validate validates a KafkaClusterRepresentation instance

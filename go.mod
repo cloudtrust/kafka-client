@@ -5,7 +5,7 @@ go 1.24.1
 require (
 	github.com/IBM/sarama v1.45.2
 	github.com/google/uuid v1.6.0
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/oauth2 v0.30.0
 )

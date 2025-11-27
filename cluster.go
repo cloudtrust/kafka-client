@@ -75,6 +75,10 @@ func newSaramaConfig(ctx context.Context, conf KafkaClusterRepresentation, logge
 
 	config.Net.TLS.Enable = *conf.TLSEnabled
 
+	if conf.KeepAlive != nil {
+		config.Net.KeepAlive = *conf.KeepAlive
+	}
+
 	return config, nil
 }
 

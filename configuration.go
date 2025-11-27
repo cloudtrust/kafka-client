@@ -16,6 +16,7 @@ type KafkaClusterRepresentation struct {
 	Enabled          *bool                         `mapstructure:"enabled"`
 	Version          *string                       `mapstructure:"version"`
 	TLSEnabled       *bool                         `mapstructure:"tls-enabled"`
+	KeepAlive        *time.Duration                `mapstructure:"keep-alive"`
 	SaramaLogEnabled *bool                         `mapstructure:"sarama-log-enabled"`
 	Brokers          []string                      `mapstructure:"brokers"`
 	Security         *KafkaSecurityRepresentation  `mapstructure:"security"`

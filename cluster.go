@@ -79,6 +79,10 @@ func newSaramaConfig(ctx context.Context, conf KafkaClusterRepresentation, logge
 		config.Net.KeepAlive = *conf.KeepAlive
 	}
 
+	if conf.MaxOpenRequests != nil {
+		config.Net.MaxOpenRequests = *conf.MaxOpenRequests
+	}
+
 	return config, nil
 }
 

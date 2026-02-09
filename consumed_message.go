@@ -11,6 +11,7 @@ type KafkaMessage interface {
 	GetContent() any
 	GetOffset() int64
 	GetPartition() int32
+	GetTopic() string
 	Commit()
 	CommitWithMessage(message string)
 	SendToFailureTopic() error
@@ -38,6 +39,11 @@ func (cm *consumedMessage) GetOffset() int64 {
 // GetPartition gets the partition
 func (cm *consumedMessage) GetPartition() int32 {
 	return cm.msg.Partition
+}
+
+// GetTopic gets the topic
+func (cm *consumedMessage) GetTopic() string {
+	return cm.msg.Topic
 }
 
 // Commit confirms that the consumed message has been processed

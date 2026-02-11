@@ -11,6 +11,7 @@ import (
 )
 
 type cluster struct {
+	id             string
 	enabled        bool
 	brokers        []string
 	saramaConfig   *sarama.Config
@@ -35,6 +36,7 @@ func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPref
 
 	var enabled = conf.Enabled == nil || *conf.Enabled
 	return &cluster{
+		id:             *conf.ID,
 		enabled:        enabled,
 		brokers:        conf.Brokers,
 		saramaConfig:   saramaConfig,
@@ -105,4 +107,8 @@ func (c *cluster) getConsumerGroup(consumerGroupName string, groupConfig sarama.
 
 	c.consumerGroups[consumerGroupName] = consumer
 	return consumer, nil
+}
+
+func (c *cluster) GetID() string {
+	return c.id
 }

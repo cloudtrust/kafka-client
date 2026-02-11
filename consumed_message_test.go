@@ -18,11 +18,13 @@ func TestConsumedMessage(t *testing.T) {
 	var content = []byte("content of the consumed message modified by mappers")
 	var offset = int64(456789)
 	var partition = int32(4)
+	var topic = "topicName"
 
 	var km = &consumedMessage{
 		msg: &sarama.ConsumerMessage{
 			Offset:    offset,
 			Partition: partition,
+			Topic:     topic,
 		},
 		consumer: &consumer{},
 		content:  content,
@@ -36,6 +38,9 @@ func TestConsumedMessage(t *testing.T) {
 	})
 	t.Run("GetPartition", func(t *testing.T) {
 		assert.Equal(t, partition, km.GetPartition())
+	})
+	t.Run("GetTopic", func(t *testing.T) {
+		assert.Equal(t, topic, km.GetTopic())
 	})
 	t.Run("Commit", func(t *testing.T) {
 		mockConsumerGroupSession.EXPECT().MarkMessage(km.msg, "")

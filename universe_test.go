@@ -71,3 +71,50 @@ func TestKafkaUniverse(t *testing.T) {
 		assert.Nil(t, universe.GetConsumer("unknown"))
 	})
 }
+
+func TestAddProducerConsumer(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	logger := mock.NewLogger(mockCtrl)
+	ctx := context.TODO()
+
+	createDefaultUniverse := func(target any) error {
+		conf := target.(*[]KafkaClusterRepresentation)
+		*conf = append(*conf, createValidKafkaClusterRepresentation())
+		return nil
+	}
+
+	t.Run("Producer with unknown cluster", func(t *testing.T) {
+		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
+		err := universe.AddProducer("unknown-cluster", KafkaProducerRepresentation{ID: ptrString("producer1")}, logger)
+		assert.Error(t, err)
+	})
+
+	t.Run("Consumer with unknown cluster", func(t *testing.T) {
+		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
+		err := universe.AddConsumer("unknown-cluster", KafkaConsumerRepresentation{ID: ptrString("consumer1")}, logger)
+		assert.Error(t, err)
+	})
+
+	t.Run("Producer success", func(t *testing.T) {
+		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
+		err := universe.AddProducer("cluster-id", KafkaProducerRepresentation{
+			ID:    ptrString("producer1"),
+			Topic: ptrString("test-topic"),
+		}, logger)
+		assert.NoError(t, err)
+		assert.NotNil(t, universe.GetProducer("producer1"))
+	})
+
+	t.Run("Consumer success", func(t *testing.T) {
+		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
+		err := universe.AddConsumer("cluster-id", KafkaConsumerRepresentation{
+			ID:                ptrString("consumer1"),
+			Topic:             ptrString("test-topic"),
+			ConsumerGroupName: ptrString("test-consumer-group"),
+		}, logger)
+		assert.NoError(t, err)
+		assert.NotNil(t, universe.GetConsumer("consumer1"))
+	})
+}

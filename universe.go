@@ -53,16 +53,10 @@ func NewKafkaUniverse(ctx context.Context, logger Logger, envKeyPrefix string, c
 		}
 		res.clusters = append(res.clusters, cluster)
 		for _, producerRep := range clusterRepresentation.Producers {
-			res.producers[*producerRep.ID], err = newProducer(cluster, producerRep, logger)
-			if err != nil {
-				return nil, err
-			}
+			res.producers[*producerRep.ID] = newProducer(cluster, producerRep, logger)
 		}
 		for _, consumerRep := range clusterRepresentation.Consumers {
-			var consumer, err = newConsumer(cluster, consumerRep, logger)
-			if err != nil {
-				return nil, err
-			}
+			var consumer = newConsumer(cluster, consumerRep, logger)
 			res.consumers[*consumerRep.ID] = consumer
 			if consumerRep.FailureProducer != nil {
 				var ok bool
@@ -139,4 +133,35 @@ func (ku *KafkaUniverse) StartConsumers(consumerIDs ...string) {
 	for _, consumerName := range consumerIDs {
 		ku.GetConsumer(consumerName).Go()
 	}
+}
+
+// AddProducer adds a producer to a cluster in the universe
+func (ku *KafkaUniverse) AddProducer(clusterID string, producerRep KafkaProducerRepresentation, logger Logger) error {
+	cluster, err := ku.getCluster(clusterID)
+	if err != nil {
+		return err
+	}
+
+	ku.producers[*producerRep.ID] = newProducer(cluster, producerRep, logger)
+	return nil
+}
+
+// AddConsumer adds a consumer to a cluster in the universe
+func (ku *KafkaUniverse) AddConsumer(clusterID string, consumerRep KafkaConsumerRepresentation, logger Logger) error {
+	cluster, err := ku.getCluster(clusterID)
+	if err != nil {
+		return err
+	}
+
+	ku.consumers[*consumerRep.ID] = newConsumer(cluster, consumerRep, logger)
+	return nil
+}
+
+func (ku *KafkaUniverse) getCluster(clusterID string) (*cluster, error) {
+	for _, c := range ku.clusters {
+		if c.GetID() == clusterID {
+			return c, nil
+		}
+	}
+	return nil, fmt.Errorf("unknown cluster %s", clusterID)
 }

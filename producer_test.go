@@ -42,7 +42,7 @@ func TestInitialize(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	var logger = mock.NewLogger(mockCtrl)
-	var producer, _ = newProducer(&cluster{enabled: true}, KafkaProducerRepresentation{
+	var producer = newProducer(&cluster{enabled: true}, KafkaProducerRepresentation{
 		ID: ptrString("producer1"),
 	}, logger)
 

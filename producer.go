@@ -24,7 +24,7 @@ type producer struct {
 	logger      Logger
 }
 
-func newProducer(cluster *cluster, producerRep KafkaProducerRepresentation, logger Logger) (*producer, error) {
+func newProducer(cluster *cluster, producerRep KafkaProducerRepresentation, logger Logger) *producer {
 	var enabled = true
 	if !cluster.enabled || (producerRep.Enabled != nil && !*producerRep.Enabled) {
 		enabled = false
@@ -36,7 +36,7 @@ func newProducer(cluster *cluster, producerRep KafkaProducerRepresentation, logg
 		enabled:     enabled,
 		topic:       producerRep.Topic,
 		logger:      logger,
-	}, nil
+	}
 }
 
 // Close closes all resources

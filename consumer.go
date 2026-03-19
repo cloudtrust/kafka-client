@@ -42,7 +42,7 @@ type consumer struct {
 	initialOffset       int64
 }
 
-func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logger Logger) (*consumer, error) {
+func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logger Logger) *consumer {
 	var enabled = true
 	if !cluster.enabled || (consumerRep.Enabled != nil && !*consumerRep.Enabled) {
 		enabled = false
@@ -80,7 +80,7 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 		logger:              logger,
 		logEventRate:        1000,
 		initialOffset:       initialOffset,
-	}, nil
+	}
 }
 
 func (c *consumer) Close() error {

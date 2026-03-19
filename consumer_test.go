@@ -58,7 +58,7 @@ func TestConsumerSimpleFunctions(t *testing.T) {
 		saramaConfig: createSaramaConfig(),
 	}
 	var consumerConf = createDefaultConsumerConfiguration()
-	var consumer, _ = newConsumer(cluster, consumerConf, logger)
+	var consumer = newConsumer(cluster, consumerConf, logger)
 
 	var mockConsumerGroup = mock.NewConsumerGroup(mockCtrl)
 	var mockConsumerGroupSession = mock.NewConsumerGroupSession(mockCtrl)
@@ -95,37 +95,37 @@ func TestConsumerSimpleFunctions(t *testing.T) {
 	})
 	t.Run("Initialize", func(t *testing.T) {
 		t.Run("Already initialized", func(t *testing.T) {
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			consumer.initialized = true
 			var err = consumer.initialize()
 			assert.NotNil(t, err)
 		})
 		t.Run("Consumer disabled", func(t *testing.T) {
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			consumer.enabled = false
 			var err = consumer.initialize()
 			assert.Nil(t, err)
 		})
 		t.Run("Enabled by default but incorrectly configured", func(t *testing.T) {
 			cluster.enabled = true
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			var err = consumer.initialize()
 			assert.NotNil(t, err)
 		})
 		t.Run("Success", func(t *testing.T) {
 			cluster.enabled = false
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			var err = consumer.initialize()
 			assert.Nil(t, err)
 			assert.Equal(t, sarama.OffsetOldest, consumer.initialOffset)
 		})
 	})
 	t.Run("Setup", func(t *testing.T) {
-		var consumer, _ = newConsumer(cluster, consumerConf, logger)
+		var consumer = newConsumer(cluster, consumerConf, logger)
 		assert.Nil(t, consumer.Setup(mockConsumerGroupSession))
 	})
 	t.Run("Cleanup", func(t *testing.T) {
-		var consumer, _ = newConsumer(cluster, consumerConf, logger)
+		var consumer = newConsumer(cluster, consumerConf, logger)
 		assert.Nil(t, consumer.Cleanup(mockConsumerGroupSession))
 	})
 }
@@ -140,7 +140,7 @@ func TestOffsetNewestConsumerSimpleFunctions(t *testing.T) {
 		saramaConfig: createSaramaConfig(),
 	}
 	var consumerConf = createOffsetNewestConsumerConfiguration()
-	var consumer, _ = newConsumer(cluster, consumerConf, logger)
+	var consumer = newConsumer(cluster, consumerConf, logger)
 
 	var mockConsumerGroup = mock.NewConsumerGroup(mockCtrl)
 	var mockConsumerGroupSession = mock.NewConsumerGroupSession(mockCtrl)
@@ -177,37 +177,37 @@ func TestOffsetNewestConsumerSimpleFunctions(t *testing.T) {
 	})
 	t.Run("Initialize", func(t *testing.T) {
 		t.Run("Already initialized", func(t *testing.T) {
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			consumer.initialized = true
 			var err = consumer.initialize()
 			assert.NotNil(t, err)
 		})
 		t.Run("Consumer disabled", func(t *testing.T) {
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			consumer.enabled = false
 			var err = consumer.initialize()
 			assert.Nil(t, err)
 		})
 		t.Run("Enabled by default but incorrectly configured", func(t *testing.T) {
 			cluster.enabled = true
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			var err = consumer.initialize()
 			assert.NotNil(t, err)
 		})
 		t.Run("Success", func(t *testing.T) {
 			cluster.enabled = false
-			var consumer, _ = newConsumer(cluster, consumerConf, logger)
+			var consumer = newConsumer(cluster, consumerConf, logger)
 			var err = consumer.initialize()
 			assert.Nil(t, err)
 			assert.Equal(t, sarama.OffsetNewest, consumer.initialOffset)
 		})
 	})
 	t.Run("Setup", func(t *testing.T) {
-		var consumer, _ = newConsumer(cluster, consumerConf, logger)
+		var consumer = newConsumer(cluster, consumerConf, logger)
 		assert.Nil(t, consumer.Setup(mockConsumerGroupSession))
 	})
 	t.Run("Cleanup", func(t *testing.T) {
-		var consumer, _ = newConsumer(cluster, consumerConf, logger)
+		var consumer = newConsumer(cluster, consumerConf, logger)
 		assert.Nil(t, consumer.Cleanup(mockConsumerGroupSession))
 	})
 }
@@ -234,7 +234,7 @@ func TestConsumeClaim(t *testing.T) {
 		saramaConfig: createSaramaConfig(),
 	}
 	var consumerConf = createDefaultConsumerConfiguration()
-	var consumer, _ = newConsumer(cluster, consumerConf, logger)
+	var consumer = newConsumer(cluster, consumerConf, logger)
 
 	var mockConsumerGroupSession = mock.NewConsumerGroupSession(mockCtrl)
 	var mockConsumerGroupClaim = mock.NewConsumerGroupClaim(mockCtrl)
@@ -308,7 +308,7 @@ func TestConsumeClaimWithDelay(t *testing.T) {
 	delay, _ := time.ParseDuration("1ms")
 	var consumerConf = createDefaultConsumerConfiguration()
 	consumerConf.ConsumptionDelay = &delay
-	var consumer, _ = newConsumer(cluster, consumerConf, logger)
+	var consumer = newConsumer(cluster, consumerConf, logger)
 	consumer.SetHandler(func(ctx context.Context, msg KafkaMessage) error {
 		return nil
 	})

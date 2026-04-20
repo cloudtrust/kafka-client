@@ -87,21 +87,21 @@ func TestAddProducerConsumer(t *testing.T) {
 
 	t.Run("Producer with unknown cluster", func(t *testing.T) {
 		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
-		err := universe.AddProducer("unknown-cluster", KafkaProducerRepresentation{ID: ptrString("producer1")}, logger)
+		err := universe.AddProducer("unknown-cluster", KafkaProducerRepresentation{ID: new("producer1")}, logger)
 		assert.Error(t, err)
 	})
 
 	t.Run("Consumer with unknown cluster", func(t *testing.T) {
 		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
-		err := universe.AddConsumer("unknown-cluster", KafkaConsumerRepresentation{ID: ptrString("consumer1")}, logger)
+		err := universe.AddConsumer("unknown-cluster", KafkaConsumerRepresentation{ID: new("consumer1")}, logger)
 		assert.Error(t, err)
 	})
 
 	t.Run("Producer success", func(t *testing.T) {
 		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
 		err := universe.AddProducer("cluster-id", KafkaProducerRepresentation{
-			ID:    ptrString("producer1"),
-			Topic: ptrString("test-topic"),
+			ID:    new("producer1"),
+			Topic: new("test-topic"),
 		}, logger)
 		assert.NoError(t, err)
 		assert.NotNil(t, universe.GetProducer("producer1"))
@@ -110,9 +110,9 @@ func TestAddProducerConsumer(t *testing.T) {
 	t.Run("Consumer success", func(t *testing.T) {
 		universe, _ := NewKafkaUniverse(ctx, logger, "CT_KAFKA_CLIENT_SECRET_", createDefaultUniverse)
 		err := universe.AddConsumer("cluster-id", KafkaConsumerRepresentation{
-			ID:                ptrString("consumer1"),
-			Topic:             ptrString("test-topic"),
-			ConsumerGroupName: ptrString("test-consumer-group"),
+			ID:                new("consumer1"),
+			Topic:             new("test-topic"),
+			ConsumerGroupName: new("test-consumer-group"),
 		}, logger)
 		assert.NoError(t, err)
 		assert.NotNil(t, universe.GetConsumer("consumer1"))

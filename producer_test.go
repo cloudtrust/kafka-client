@@ -43,7 +43,7 @@ func TestInitialize(t *testing.T) {
 
 	var logger = mock.NewLogger(mockCtrl)
 	var producer = newProducer(&cluster{enabled: true}, KafkaProducerRepresentation{
-		ID: ptrString("producer1"),
+		ID: new("producer1"),
 	}, logger)
 
 	logger.EXPECT().Error(gomock.Any(), gomock.Any())
@@ -54,13 +54,13 @@ func TestInitialize(t *testing.T) {
 	})
 	t.Run("Disabled", func(t *testing.T) {
 		producer.initialized = false
-		producer.enabled = *ptrBool(false)
+		producer.enabled = *new(false)
 		assert.Nil(t, producer.initialize())
 		assert.Nil(t, producer.SendMessageBytes([]byte("test")))
 	})
 	t.Run("Sarama not configured", func(t *testing.T) {
 		producer.initialized = false
-		producer.enabled = *ptrBool(true)
+		producer.enabled = *new(true)
 		assert.NotNil(t, producer.initialize())
 	})
 }

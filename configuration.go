@@ -2,6 +2,7 @@ package kafkauniverse
 
 import (
 	"errors"
+	"slices"
 	"time"
 )
 
@@ -61,10 +62,8 @@ func (kcr *KafkaClusterRepresentation) Validate() error {
 	if len(kcr.Brokers) == 0 {
 		return errors.New("cluster brokers should contain at least one broker")
 	}
-	for _, broker := range kcr.Brokers {
-		if broker == "" {
-			return errors.New("cluster broker value should not be empty")
-		}
+	if slices.Contains(kcr.Brokers, "") {
+		return errors.New("cluster broker value should not be empty")
 	}
 	if kcr.Security == nil {
 		return errors.New("cluster is missing security configuration")

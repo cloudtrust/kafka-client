@@ -3,7 +3,7 @@ module github.com/cloudtrust/kafka-client
 go 1.26.1
 
 require (
-	github.com/IBM/sarama v1.47.0
+	github.com/IBM/sarama v1.48.0
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
@@ -20,13 +20,14 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

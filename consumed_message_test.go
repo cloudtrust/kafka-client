@@ -51,7 +51,7 @@ func TestConsumedMessage(t *testing.T) {
 		assert.Nil(t, km.SendToFailureTopic())
 	})
 	t.Run("Send to uninitialized failure topic", func(t *testing.T) {
-		km.consumer.failureProducerName = ptrString("failure-topic")
+		km.consumer.failureProducerName = new("failure-topic")
 		km.consumer.failureProducer = nil
 		assert.Contains(t, km.SendToFailureTopic().Error(), "uninitialized producer")
 	})

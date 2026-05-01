@@ -28,23 +28,23 @@ func createSaramaConfig() *sarama.Config {
 
 func createDefaultConsumerConfiguration() KafkaConsumerRepresentation {
 	return KafkaConsumerRepresentation{
-		ID:                ptrString("id-consumer"),
-		Enabled:           ptrBool(true),
-		Topic:             ptrString("topic"),
-		ConsumerGroupName: ptrString("consumer-group"),
-		FailureProducer:   ptrString("failure-producer"),
+		ID:                new("id-consumer"),
+		Enabled:           new(true),
+		Topic:             new("topic"),
+		ConsumerGroupName: new("consumer-group"),
+		FailureProducer:   new("failure-producer"),
 		InitialOffset:     nil,
 	}
 }
 
 func createOffsetNewestConsumerConfiguration() KafkaConsumerRepresentation {
 	return KafkaConsumerRepresentation{
-		ID:                ptrString("id-consumer"),
-		Enabled:           ptrBool(true),
-		Topic:             ptrString("topic"),
-		ConsumerGroupName: ptrString("consumer-group"),
-		FailureProducer:   ptrString("failure-producer"),
-		InitialOffset:     ptrString("newest"),
+		ID:                new("id-consumer"),
+		Enabled:           new(true),
+		Topic:             new("topic"),
+		ConsumerGroupName: new("consumer-group"),
+		FailureProducer:   new("failure-producer"),
+		InitialOffset:     new("newest"),
 	}
 }
 

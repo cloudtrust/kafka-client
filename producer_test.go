@@ -54,13 +54,13 @@ func TestInitialize(t *testing.T) {
 	})
 	t.Run("Disabled", func(t *testing.T) {
 		producer.initialized = false
-		producer.enabled = *new(false)
+		producer.enabled = false
 		assert.Nil(t, producer.initialize())
 		assert.Nil(t, producer.SendMessageBytes([]byte("test")))
 	})
 	t.Run("Sarama not configured", func(t *testing.T) {
 		producer.initialized = false
-		producer.enabled = *new(true)
+		producer.enabled = true
 		assert.NotNil(t, producer.initialize())
 	})
 }

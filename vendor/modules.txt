@@ -1,15 +1,13 @@
-# github.com/IBM/sarama v1.49.0
+# github.com/IBM/sarama v1.50.1
 ## explicit; go 1.25.0
 github.com/IBM/sarama
+github.com/IBM/sarama/internal/queue
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
 # github.com/eapache/go-resiliency v1.7.0
 ## explicit; go 1.13
 github.com/eapache/go-resiliency/breaker
-# github.com/eapache/queue v1.1.0
-## explicit
-github.com/eapache/queue
 # github.com/google/uuid v1.6.0
 ## explicit
 github.com/google/uuid
@@ -101,11 +99,11 @@ github.com/stretchr/testify/assert/yaml
 # go.uber.org/mock v0.6.0
 ## explicit; go 1.23.0
 go.uber.org/mock/gomock
-# golang.org/x/crypto v0.51.0
+# golang.org/x/crypto v0.52.0
 ## explicit; go 1.25.0
 golang.org/x/crypto/md4
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.54.0
+# golang.org/x/net v0.55.0
 ## explicit; go 1.25.0
 golang.org/x/net/http2/hpack
 golang.org/x/net/internal/socks
@@ -115,7 +113,7 @@ golang.org/x/net/proxy
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# golang.org/x/sys v0.44.0
+# golang.org/x/sys v0.45.0
 ## explicit; go 1.25.0
 golang.org/x/sys/unix
 # gopkg.in/yaml.v3 v3.0.1

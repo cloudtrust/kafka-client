@@ -40,6 +40,7 @@ type consumer struct {
 	logger              Logger
 	logEventRate        int64
 	initialOffset       int64
+	cancel              context.CancelFunc
 }
 
 func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logger Logger) *consumer {
@@ -86,6 +87,9 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 func (c *consumer) Close() error {
 	if !c.initialized || !c.enabled {
 		return nil
+	}
+	if c.cancel != nil {
+		c.cancel()
 	}
 	var anError error
 	if err := c.consumerGroup.Close(); err != nil {
@@ -151,19 +155,35 @@ func (c *consumer) SetAutoCommit(enabled bool) {
 
 func (c *consumer) Go() {
 	if c.initialized && c.enabled {
+		ctx, cancel := context.WithCancel(context.Background())
+		c.cancel = cancel
+
 		go func() {
-			var failureTopic = "none"
+			for err := range c.consumerGroup.Errors() {
+				c.logger.Error(ctx, "msg", "Failure during message processing. Exit", "err", err, "topic", c.topic)
+				os.Exit(1)
+				return
+			}
+		}()
+
+		go func() {
+			failureTopic := "none"
 			if c.failureProducerName != nil {
 				failureTopic = *c.failureProducerName
 			}
-			c.logger.Info(context.Background(), "msg", "Just started thread to consume queue", "topic", c.topic, "failure-topic", failureTopic)
+			c.logger.Info(ctx, "msg", "Just started thread to consume queue", "topic", c.topic, "failure-topic", failureTopic)
+
 			for {
-				c.consumerGroup.Consume(context.Background(), []string{c.topic}, c)
-				select {
-				case err := <-c.consumerGroup.Errors():
-					c.logger.Error(context.Background(), "msg", "Failure during message processing. Exit", "err", err, "topic", c.topic)
+				if err := c.consumerGroup.Consume(ctx, []string{c.topic}, c); err != nil {
+					c.logger.Error(ctx, "msg", "Consumer group session error. Exit", "err", err, "topic", c.topic)
 					os.Exit(1)
-				default:
+					return
+				}
+				// Consume returns nil after a rebalance; check if context was cancelled
+				if ctx.Err() != nil {
+					c.logger.Info(ctx, "msg", "Consumer stopped. Exit", "topic", c.topic)
+					os.Exit(1)
+					return
 				}
 			}
 		}()

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -161,8 +160,8 @@ func (c *consumer) Go() {
 		go func() {
 			for err := range c.consumerGroup.Errors() {
 				c.logger.Error(ctx, "msg", "Failure during message processing. Exit", "err", err, "topic", c.topic)
-				os.Exit(1)
-				return
+				// os.Exit(1)
+				// return
 			}
 		}()
 
@@ -176,14 +175,14 @@ func (c *consumer) Go() {
 			for {
 				if err := c.consumerGroup.Consume(ctx, []string{c.topic}, c); err != nil {
 					c.logger.Error(ctx, "msg", "Consumer group session error. Exit", "err", err, "topic", c.topic)
-					os.Exit(1)
-					return
+					// os.Exit(1)
+					// return
 				}
-				// Consume returns nil after a rebalance; check if context was cancelled
+				// Consume retur ns nil after a rebalance; check if context was cancelled
 				if ctx.Err() != nil {
 					c.logger.Info(ctx, "msg", "Consumer stopped. Exit", "topic", c.topic)
-					os.Exit(1)
-					return
+					// os.Exit(1)
+					// return
 				}
 			}
 		}()

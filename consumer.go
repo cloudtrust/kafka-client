@@ -126,6 +126,11 @@ func (c *consumer) initialize() error {
 	return nil
 }
 
+func (c *consumer) reinitialize() error {
+	c.initialized = false
+	return c.initialize()
+}
+
 func (c *consumer) SetHandler(handler KafkaMessageHandler) *consumer {
 	c.handler = handler
 	return c
@@ -174,11 +179,16 @@ func (c *consumer) Go() {
 
 			for {
 				if err := c.consumerGroup.Consume(ctx, []string{c.topic}, c); err != nil {
+					// known case : rollout in kafka cluster
 					c.logger.Error(ctx, "msg", "Consumer group session error. Exit", "err", err, "topic", c.topic)
+					err := c.reinitialize()
+					if err != nil {
+						c.logger.Error(ctx, "msg", "Failed to reinitialize consumer", "err", err, "topic", c.topic)
+					}
 					// os.Exit(1)
 					// return
 				}
-				// Consume retur ns nil after a rebalance; check if context was cancelled
+				// Consume returns nil after a rebalance; check if context was cancelled
 				if ctx.Err() != nil {
 					c.logger.Info(ctx, "msg", "Consumer stopped. Exit", "topic", c.topic)
 					// os.Exit(1)

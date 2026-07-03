@@ -22,6 +22,8 @@ type KafkaMessageMapper func(ctx context.Context, messageOffset int64, in any) (
 // KafkaContextInitializer function type
 type KafkaContextInitializer func(context.Context) context.Context
 
+var abortingError = errors.New("aborting message consumption")
+
 type consumer struct {
 	initialized         bool
 	cluster             *cluster
@@ -40,6 +42,8 @@ type consumer struct {
 	logger              Logger
 	logEventRate        int64
 	initialOffset       int64
+	cancel              context.CancelFunc
+	live                bool
 }
 
 func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logger Logger) *consumer {
@@ -80,12 +84,16 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 		logger:              logger,
 		logEventRate:        1000,
 		initialOffset:       initialOffset,
+		live:                true,
 	}
 }
 
 func (c *consumer) Close() error {
 	if !c.initialized || !c.enabled {
 		return nil
+	}
+	if c.cancel != nil {
+		c.cancel()
 	}
 	var anError error
 	if err := c.consumerGroup.Close(); err != nil {
@@ -123,6 +131,11 @@ func (c *consumer) initialize() error {
 	return nil
 }
 
+func (c *consumer) reinitialize() error {
+	c.initialized = false
+	return c.initialize()
+}
+
 func (c *consumer) SetHandler(handler KafkaMessageHandler) *consumer {
 	c.handler = handler
 	return c
@@ -151,19 +164,42 @@ func (c *consumer) SetAutoCommit(enabled bool) {
 
 func (c *consumer) Go() {
 	if c.initialized && c.enabled {
+		ctx, cancel := context.WithCancel(context.Background())
+		c.cancel = cancel
+
 		go func() {
-			var failureTopic = "none"
+			for err := range c.consumerGroup.Errors() {
+				if errors.Is(err, abortingError) {
+					c.logger.Info(ctx, "msg", "Aborting message consumption. Exit", "err", err, "topic", c.topic, "consumerGroup", c.consumerGroupName)
+					os.Exit(1)
+				}
+				c.logger.Error(ctx, "msg", "Failure during message processing. Not exiting", "err", err, "topic", c.topic, "consumerGroup", c.consumerGroupName)
+			}
+		}()
+
+		go func() {
+			failureTopic := "none"
 			if c.failureProducerName != nil {
 				failureTopic = *c.failureProducerName
 			}
-			c.logger.Info(context.Background(), "msg", "Just started thread to consume queue", "topic", c.topic, "failure-topic", failureTopic)
+			c.logger.Info(ctx, "msg", "Just started thread to consume queue", "topic", c.topic, "failure-topic", failureTopic, "consumerGroup", c.consumerGroupName)
+
 			for {
-				c.consumerGroup.Consume(context.Background(), []string{c.topic}, c)
-				select {
-				case err := <-c.consumerGroup.Errors():
-					c.logger.Error(context.Background(), "msg", "Failure during message processing. Exit", "err", err, "topic", c.topic)
-					os.Exit(1)
-				default:
+				c.live = true
+				if err := c.consumerGroup.Consume(ctx, []string{c.topic}, c); err != nil {
+					c.live = false
+					// known cases : rollout in kafka cluster, kafka cluster is not available for a while
+					c.logger.Error(ctx, "msg", "Consume error", "err", err, "topic", c.topic, "consumerGroup", c.consumerGroupName)
+					err := c.reinitialize()
+					if err != nil {
+						c.logger.Error(ctx, "msg", "Failed to reinitialize consumer", "err", err, "topic", c.topic, "consumerGroup", c.consumerGroupName)
+					}
+					time.Sleep(10 * time.Second)
+				}
+				// Consume returns nil after a rebalance; check if context was cancelled
+				if ctx.Err() != nil {
+					c.logger.Info(ctx, "msg", "Context cancelled.", "err", ctx.Err(), "topic", c.topic, "consumerGroup", c.consumerGroupName)
+					return
 				}
 			}
 		}()
@@ -177,7 +213,7 @@ func (c *consumer) applyMappers(ctx context.Context, kafkaMsg *sarama.ConsumerMe
 		if content, err = mapper(ctx, kafkaMsg.Offset, content); err != nil {
 			logMsg := fmt.Sprintf("Mapper #%d failed to map content", idx+1)
 			c.logger.Error(ctx, "msg", logMsg, "err", err, "topic", c.topic, "offset", kafkaMsg.Offset,
-				"partition", kafkaMsg.Partition, "contentLength", len(kafkaMsg.Value))
+				"partition", kafkaMsg.Partition, "contentLength", len(kafkaMsg.Value), "consumerGroup", c.consumerGroupName)
 			return nil, err
 		}
 	}
@@ -219,14 +255,14 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		} else {
 			err = c.handler(ctx, msg)
 			if err != nil {
-				c.logger.Error(ctx, "msg", "Failed to handle event", "err", err.Error(), "topic", claim.Topic())
+				c.logger.Error(ctx, "msg", "Failed to handle event", "err", err.Error(), "topic", claim.Topic(), "consumerGroup", c.consumerGroupName)
 				if msg.abort {
-					return err
+					return fmt.Errorf("%w. Due to %w", abortingError, err)
 				}
 			}
 			if kafkaMsg.Offset%c.logEventRate == 0 {
 				logMsg := fmt.Sprintf("Messages from %d to %d offset are processed", kafkaMsg.Offset-c.logEventRate, kafkaMsg.Offset)
-				c.logger.Info(ctx, "msg", logMsg, "topic", c.topic, "partition", kafkaMsg.Partition, "topic", claim.Topic())
+				c.logger.Info(ctx, "msg", logMsg, "topic", c.topic, "partition", kafkaMsg.Partition, "topic", claim.Topic(), "consumerGroup", c.consumerGroupName)
 			}
 		}
 
@@ -237,4 +273,8 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 	}
 
 	return nil
+}
+
+func (c *consumer) IsLive() bool {
+	return c.initialized && c.enabled && c.consumerGroup != nil && c.live
 }

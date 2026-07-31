@@ -212,6 +212,215 @@ func TestOffsetNewestConsumerSimpleFunctions(t *testing.T) {
 	})
 }
 
+func TestConsumerGo(t *testing.T) {
+	t.Run("Not initialized", func(t *testing.T) {
+		var mockCtrl = gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var logger = mock.NewLogger(mockCtrl)
+		var cluster = &cluster{
+			logger:       logger,
+			saramaConfig: createSaramaConfig(),
+		}
+		var consumerConf = createDefaultConsumerConfiguration()
+		var consumer = newConsumer(cluster, consumerConf, logger)
+
+		consumer.enabled = true
+		consumer.initialized = false
+		consumer.Go()
+
+		assert.Nil(t, consumer.cancel)
+	})
+
+	t.Run("Disabled", func(t *testing.T) {
+		var mockCtrl = gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var logger = mock.NewLogger(mockCtrl)
+		var cluster = &cluster{
+			logger:       logger,
+			saramaConfig: createSaramaConfig(),
+		}
+		var consumerConf = createDefaultConsumerConfiguration()
+		var consumer = newConsumer(cluster, consumerConf, logger)
+
+		consumer.initialized = true
+		consumer.enabled = false
+		consumer.Go()
+
+		assert.Nil(t, consumer.cancel)
+	})
+
+	t.Run("Initialized and enabled", func(t *testing.T) {
+		var mockCtrl = gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var logger = mock.NewLogger(mockCtrl)
+		var cluster = &cluster{
+			logger:       logger,
+			saramaConfig: createSaramaConfig(),
+		}
+		var consumerConf = createDefaultConsumerConfiguration()
+		var consumer = newConsumer(cluster, consumerConf, logger)
+		var mockConsumerGroup = mock.NewConsumerGroup(mockCtrl)
+
+		consumer.initialized = true
+		consumer.enabled = true
+		consumer.consumerGroup = mockConsumerGroup
+
+		var consumeCalled = make(chan struct{}, 1)
+		var errorsChannel = make(chan error)
+		close(errorsChannel)
+
+		logger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
+		logger.EXPECT().Error(gomock.Any(), gomock.Any()).AnyTimes()
+
+		mockConsumerGroup.EXPECT().Errors().Return(errorsChannel).AnyTimes()
+		mockConsumerGroup.EXPECT().Consume(gomock.Any(), []string{consumer.topic}, consumer).DoAndReturn(
+			func(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+				select {
+				case consumeCalled <- struct{}{}:
+				default:
+				}
+				<-ctx.Done()
+				return nil
+			},
+		).Times(1)
+		mockConsumerGroup.EXPECT().Close().Return(nil)
+
+		consumer.Go()
+		assert.NotNil(t, consumer.cancel)
+
+		select {
+		case <-consumeCalled:
+		case <-time.After(500 * time.Millisecond):
+			t.Fatal("expected consumer group Consume to be called")
+		}
+
+		assert.True(t, consumer.IsLive())
+		assert.Nil(t, consumer.Close())
+	})
+
+	t.Run("Consumer group errors are logged", func(t *testing.T) {
+		var mockCtrl = gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var logger = mock.NewLogger(mockCtrl)
+		var cluster = &cluster{
+			logger:       logger,
+			saramaConfig: createSaramaConfig(),
+		}
+		var consumerConf = createDefaultConsumerConfiguration()
+		var consumer = newConsumer(cluster, consumerConf, logger)
+		var mockConsumerGroup = mock.NewConsumerGroup(mockCtrl)
+
+		consumer.initialized = true
+		consumer.enabled = true
+		consumer.consumerGroup = mockConsumerGroup
+
+		var errorsChannel = make(chan error, 1)
+		var errorLogged = make(chan struct{}, 1)
+
+		logger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
+		logger.EXPECT().Error(gomock.Any(), gomock.Any()).Do(func(ctx context.Context, keyvals ...any) {
+			select {
+			case errorLogged <- struct{}{}:
+			default:
+			}
+		}).Times(1)
+
+		mockConsumerGroup.EXPECT().Errors().Return(errorsChannel).AnyTimes()
+		mockConsumerGroup.EXPECT().Consume(gomock.Any(), []string{consumer.topic}, consumer).DoAndReturn(
+			func(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+				<-ctx.Done()
+				return nil
+			},
+		).Times(1)
+		mockConsumerGroup.EXPECT().Close().Return(nil)
+
+		consumer.Go()
+		errorsChannel <- errors.New("error from consumer group")
+
+		select {
+		case <-errorLogged:
+		case <-time.After(500 * time.Millisecond):
+			t.Fatal("expected consumer group error to be logged")
+		}
+
+		close(errorsChannel)
+		assert.Nil(t, consumer.Close())
+	})
+
+	t.Run("Consume error triggers reinitialize failure log", func(t *testing.T) {
+		var mockCtrl = gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		var logger = mock.NewLogger(mockCtrl)
+		var cluster = &cluster{
+			enabled:      true,
+			logger:       logger,
+			saramaConfig: createSaramaConfig(),
+		}
+		var consumerConf = createDefaultConsumerConfiguration()
+		var consumer = newConsumer(cluster, consumerConf, logger)
+		var mockConsumerGroup = mock.NewConsumerGroup(mockCtrl)
+
+		consumer.initialized = true
+		consumer.enabled = true
+		consumer.consumerGroup = mockConsumerGroup
+
+		var consumeErr = errors.New("consume failure")
+		var consumeCalled = make(chan struct{}, 1)
+		var errorLogged = make(chan struct{}, 2)
+		var errorsChannel = make(chan error)
+		close(errorsChannel)
+		logger.EXPECT().Info(gomock.Any(), gomock.Any()).AnyTimes()
+		logger.EXPECT().Warn(gomock.Any(), gomock.Any()).AnyTimes()
+		logger.EXPECT().Error(gomock.Any(), gomock.Any()).Do(func(ctx context.Context, keyvals ...any) {
+			select {
+			case errorLogged <- struct{}{}:
+			default:
+			}
+		}).Times(2)
+
+		mockConsumerGroup.EXPECT().Errors().Return(errorsChannel).AnyTimes()
+		mockConsumerGroup.EXPECT().Consume(gomock.Any(), []string{consumer.topic}, consumer).DoAndReturn(
+			func(ctx context.Context, topics []string, handler sarama.ConsumerGroupHandler) error {
+				select {
+				case consumeCalled <- struct{}{}:
+				default:
+				}
+				return consumeErr
+			},
+		).Times(1)
+		mockConsumerGroup.EXPECT().Close().Return(nil)
+
+		consumer.Go()
+
+		select {
+		case <-consumeCalled:
+		case <-time.After(500 * time.Millisecond):
+			t.Fatal("expected consumer group Consume to be called")
+		}
+
+		select {
+		case <-errorLogged:
+		case <-time.After(500 * time.Millisecond):
+			t.Fatal("expected consume error to be logged")
+		}
+
+		select {
+		case <-errorLogged:
+		case <-time.After(500 * time.Millisecond):
+			t.Fatal("expected reinitialize failure to be logged")
+		}
+
+		consumer.initialized = true
+		consumer.consumerGroup = mockConsumerGroup
+		assert.Nil(t, consumer.Close())
+	})
+}
+
 func fillMessageChannel(messages chan *sarama.ConsumerMessage, values ...string) {
 	go func() {
 		for _, value := range values {
@@ -265,7 +474,8 @@ func TestConsumeClaim(t *testing.T) {
 		mockConsumerGroupClaim.EXPECT().Topic().Return("topic")
 
 		var err = consumer.ConsumeClaim(mockConsumerGroupSession, mockConsumerGroupClaim)
-		assert.Equal(t, handlerError, err)
+		assert.NotNil(t, err)
+		assert.True(t, errors.Is(err, handlerError))
 	})
 	t.Run("AddContentMapper-Disable autocommit", func(t *testing.T) {
 		var messages = make(chan *sarama.ConsumerMessage)

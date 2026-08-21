@@ -57,4 +57,18 @@ func TestNoopKafkaProducer(t *testing.T) {
 		err := noopProducer.AddMessageToTxn(nil, "", nil)
 		assert.Nil(t, err)
 	})
+	t.Run("AddOffsetsToTxnWithGroupMetadata", func(t *testing.T) {
+		err := noopProducer.AddOffsetsToTxnWithGroupMetadata(nil, nil)
+		assert.Nil(t, err)
+	})
+	t.Run("AddMessageToTxn", func(t *testing.T) {
+		noopProducer := NoopKafkaProducer{}
+		err := noopProducer.AddMessageToTxn(nil, "", nil)
+		assert.Nil(t, err)
+	})
+	t.Run("AddMessageToTxnWithGroupMetadata", func(t *testing.T) {
+		noopProducer := NoopKafkaProducer{}
+		err := noopProducer.AddMessageToTxnWithGroupMetadata(nil, nil, nil)
+		assert.Nil(t, err)
+	})
 }

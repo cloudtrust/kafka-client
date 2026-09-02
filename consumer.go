@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/misc"
-	"github.com/google/uuid"
 )
 
 // KafkaMessageHandler interface shall be implemented by clients
@@ -59,9 +59,10 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 
 	var initialOffset = sarama.OffsetOldest
 	if consumerRep.InitialOffset != nil {
-		if *consumerRep.InitialOffset == offsetNewestParam {
+		switch *consumerRep.InitialOffset {
+		case offsetNewestParam:
 			initialOffset = sarama.OffsetNewest
-		} else if *consumerRep.InitialOffset == offsetOldestParam {
+		case offsetOldestParam:
 			initialOffset = sarama.OffsetOldest
 		}
 	}
@@ -115,9 +116,10 @@ func (c *consumer) initialize() error {
 	}
 
 	groupConfig := *c.cluster.saramaConfig
-	if c.initialOffset == sarama.OffsetNewest {
+	switch c.initialOffset {
+	case sarama.OffsetNewest:
 		groupConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
-	} else if c.initialOffset == sarama.OffsetOldest {
+	case sarama.OffsetOldest:
 		groupConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
 	}
 

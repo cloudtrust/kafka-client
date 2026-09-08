@@ -7,10 +7,10 @@ import (
 	"os"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/IBM/sarama"
 	"github.com/cloudtrust/kafka-client/misc"
-	"github.com/google/uuid"
 )
 
 // KafkaMessageHandler interface shall be implemented by clients

@@ -405,6 +405,20 @@ func (mr *SyncProducerMockRecorder) AddMessageToTxn(msg, groupId, metadata any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMessageToTxn", reflect.TypeOf((*SyncProducer)(nil).AddMessageToTxn), msg, groupId, metadata)
 }
 
+// AddMessageToTxnWithGroupMetadata mocks base method.
+func (m *SyncProducer) AddMessageToTxnWithGroupMetadata(msg *sarama.ConsumerMessage, groupMetadata *sarama.ConsumerGroupMetadata, metadata *string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddMessageToTxnWithGroupMetadata", msg, groupMetadata, metadata)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddMessageToTxnWithGroupMetadata indicates an expected call of AddMessageToTxnWithGroupMetadata.
+func (mr *SyncProducerMockRecorder) AddMessageToTxnWithGroupMetadata(msg, groupMetadata, metadata any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddMessageToTxnWithGroupMetadata", reflect.TypeOf((*SyncProducer)(nil).AddMessageToTxnWithGroupMetadata), msg, groupMetadata, metadata)
+}
+
 // AddOffsetsToTxn mocks base method.
 func (m *SyncProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOffsetMetadata, groupId string) error {
 	m.ctrl.T.Helper()
@@ -417,6 +431,20 @@ func (m *SyncProducer) AddOffsetsToTxn(offsets map[string][]*sarama.PartitionOff
 func (mr *SyncProducerMockRecorder) AddOffsetsToTxn(offsets, groupId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOffsetsToTxn", reflect.TypeOf((*SyncProducer)(nil).AddOffsetsToTxn), offsets, groupId)
+}
+
+// AddOffsetsToTxnWithGroupMetadata mocks base method.
+func (m *SyncProducer) AddOffsetsToTxnWithGroupMetadata(offsets map[string][]*sarama.PartitionOffsetMetadata, groupMetadata *sarama.ConsumerGroupMetadata) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddOffsetsToTxnWithGroupMetadata", offsets, groupMetadata)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddOffsetsToTxnWithGroupMetadata indicates an expected call of AddOffsetsToTxnWithGroupMetadata.
+func (mr *SyncProducerMockRecorder) AddOffsetsToTxnWithGroupMetadata(offsets, groupMetadata any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOffsetsToTxnWithGroupMetadata", reflect.TypeOf((*SyncProducer)(nil).AddOffsetsToTxnWithGroupMetadata), offsets, groupMetadata)
 }
 
 // BeginTxn mocks base method.

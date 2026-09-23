@@ -277,6 +277,10 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 	return nil
 }
 
+func (c *consumer) IsEnabled() bool {
+	return c.initialized && c.enabled
+}
+
 func (c *consumer) IsLive() bool {
 	return c.initialized && c.enabled && c.consumerGroup != nil && c.live
 }

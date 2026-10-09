@@ -44,7 +44,7 @@ func TestInitialize(t *testing.T) {
 	var logger = mock.NewLogger(mockCtrl)
 	var producer = newProducer(&cluster{enabled: true}, KafkaProducerRepresentation{
 		ID: new("producer1"),
-	}, logger)
+	}, &errorManager{}, logger)
 
 	logger.EXPECT().Error(gomock.Any(), gomock.Any())
 

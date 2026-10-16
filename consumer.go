@@ -44,9 +44,10 @@ type consumer struct {
 	initialOffset       int64
 	cancel              context.CancelFunc
 	live                bool
+	errorManager        *errorManager
 }
 
-func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logger Logger) *consumer {
+func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, errorManager *errorManager, logger Logger) *consumer {
 	var enabled = true
 	if !cluster.enabled || (consumerRep.Enabled != nil && !*consumerRep.Enabled) {
 		enabled = false
@@ -86,6 +87,7 @@ func newConsumer(cluster *cluster, consumerRep KafkaConsumerRepresentation, logg
 		logEventRate:        1000,
 		initialOffset:       initialOffset,
 		live:                true,
+		errorManager:        errorManager,
 	}
 }
 
@@ -245,19 +247,15 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 		}
 
 		var content, err = c.applyMappers(ctx, kafkaMsg)
-		var msg = &consumedMessage{
-			msg:      kafkaMsg,
-			content:  content,
-			consumer: c,
-			session:  session,
-			abort:    false,
-		}
+		var msg = newConsumedMessage(kafkaMsg, content, c, session)
+		msg.AddCustomField("consumerGroup", c.consumerGroupName)
 		if err != nil {
+			c.errorManager.reportMapperError(ctx, msg, err)
 			msg.SendToFailureTopic()
 		} else {
 			err = c.handler(ctx, msg)
 			if err != nil {
-				c.logger.Error(ctx, "msg", "Failed to handle event", "err", err.Error(), "topic", claim.Topic(), "consumerGroup", c.consumerGroupName)
+				c.errorManager.reportMessageHandlerError(ctx, msg, err)
 				if msg.abort {
 					return fmt.Errorf("%w. Due to %w", abortingError, err)
 				}

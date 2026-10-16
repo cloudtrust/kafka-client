@@ -11,11 +11,15 @@ type KafkaMessage interface {
 	GetContent() any
 	GetOffset() int64
 	GetPartition() int32
+	GetPartitionKey() string
 	GetTopic() string
 	Commit()
 	CommitWithMessage(message string)
 	SendToFailureTopic() error
 	AbortConsuming()
+	AddCustomField(key string, value any)
+	GetCustomFields() map[string]any
+	ExportCustomFields() []any
 }
 
 type consumedMessage struct {
@@ -24,6 +28,18 @@ type consumedMessage struct {
 	consumer *consumer
 	session  sarama.ConsumerGroupSession
 	abort    bool
+	custom   customFields
+}
+
+func newConsumedMessage(msg *sarama.ConsumerMessage, content any, consumer *consumer, session sarama.ConsumerGroupSession) *consumedMessage {
+	return &consumedMessage{
+		msg:      msg,
+		content:  content,
+		consumer: consumer,
+		session:  session,
+		abort:    false,
+		custom:   customFields{},
+	}
 }
 
 // GetContent returns the content of the consumed message. Mappers have already been applied to the original received content.
@@ -39,6 +55,11 @@ func (cm *consumedMessage) GetOffset() int64 {
 // GetPartition gets the partition
 func (cm *consumedMessage) GetPartition() int32 {
 	return cm.msg.Partition
+}
+
+// GetPartitionKey returns the partition key
+func (cm *consumedMessage) GetPartitionKey() string {
+	return string(cm.msg.Key)
 }
 
 // GetTopic gets the topic
@@ -71,4 +92,19 @@ func (cm *consumedMessage) SendToFailureTopic() error {
 // AbortConsuming let the consuming main process stops. The abort command will be taken into account only if the message handler returns an error
 func (cm *consumedMessage) AbortConsuming() {
 	cm.abort = true
+}
+
+// AddCustomField adds a custom field to the consumed message. This can be used to attach additional metadata to the message.
+func (cm *consumedMessage) AddCustomField(key string, value any) {
+	cm.custom[key] = value
+}
+
+// ExportCustomFields returns all custom fields attached to the consumed message as a slice of key-value pairs.
+func (cm *consumedMessage) ExportCustomFields() []any {
+	return cm.custom.export()
+}
+
+// GetCustomFields returns all custom fields attached to the consumed message.
+func (cm *consumedMessage) GetCustomFields() map[string]any {
+	return cm.custom
 }

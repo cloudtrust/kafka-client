@@ -8,9 +8,10 @@ import (
 
 // KafkaUniverse struct
 type KafkaUniverse struct {
-	clusters  []*cluster
-	producers map[string]*producer
-	consumers map[string]*consumer
+	clusters     []*cluster
+	producers    map[string]*producer
+	consumers    map[string]*consumer
+	errorManager *errorManager
 }
 
 // Logger interface for logging with level
@@ -20,6 +21,9 @@ type Logger interface {
 	Warn(ctx context.Context, keyvals ...any)
 	Error(ctx context.Context, keyvals ...any)
 }
+
+// ErrorLogger is a function type for logging errors with context and key-value pairs.
+type ErrorLogger func(ctx context.Context, keyvals ...any)
 
 // ConfigurationProvider interface
 type ConfigurationProvider func(target any) error
@@ -43,20 +47,21 @@ func NewKafkaUniverse(ctx context.Context, logger Logger, envKeyPrefix string, c
 		}
 	}
 	var res = KafkaUniverse{
-		producers: map[string]*producer{},
-		consumers: map[string]*consumer{},
+		producers:    map[string]*producer{},
+		consumers:    map[string]*consumer{},
+		errorManager: &errorManager{},
 	}
 	for _, clusterRepresentation := range clusterRepresentations {
-		var cluster, err = newCluster(ctx, clusterRepresentation, envKeyPrefix, logger)
+		var cluster, err = newCluster(ctx, clusterRepresentation, envKeyPrefix, res.errorManager, logger)
 		if err != nil {
 			return nil, err
 		}
 		res.clusters = append(res.clusters, cluster)
 		for _, producerRep := range clusterRepresentation.Producers {
-			res.producers[*producerRep.ID] = newProducer(cluster, producerRep, logger)
+			res.producers[*producerRep.ID] = newProducer(cluster, producerRep, res.errorManager, logger)
 		}
 		for _, consumerRep := range clusterRepresentation.Consumers {
-			var consumer = newConsumer(cluster, consumerRep, logger)
+			var consumer = newConsumer(cluster, consumerRep, res.errorManager, logger)
 			res.consumers[*consumerRep.ID] = consumer
 			if consumerRep.FailureProducer != nil {
 				var ok bool
@@ -142,7 +147,7 @@ func (ku *KafkaUniverse) AddProducer(clusterID string, producerRep KafkaProducer
 		return err
 	}
 
-	ku.producers[*producerRep.ID] = newProducer(cluster, producerRep, logger)
+	ku.producers[*producerRep.ID] = newProducer(cluster, producerRep, ku.errorManager, logger)
 	return nil
 }
 
@@ -153,7 +158,7 @@ func (ku *KafkaUniverse) AddConsumer(clusterID string, consumerRep KafkaConsumer
 		return err
 	}
 
-	ku.consumers[*consumerRep.ID] = newConsumer(cluster, consumerRep, logger)
+	ku.consumers[*consumerRep.ID] = newConsumer(cluster, consumerRep, ku.errorManager, logger)
 	return nil
 }
 
@@ -164,4 +169,13 @@ func (ku *KafkaUniverse) getCluster(clusterID string) (*cluster, error) {
 		}
 	}
 	return nil, fmt.Errorf("unknown cluster %s", clusterID)
+}
+
+// AddErrorHandler adds an error handler to the Kafka universe. The handler will be called whenever an error occurs.
+func (ku *KafkaUniverse) AddErrorHandler(handler func(ctx context.Context, kafkaStatus KafkaStatus)) {
+	ku.errorManager.addErrorHandler(handler)
+}
+
+func (ku *KafkaUniverse) AddErrorLogger(logger ErrorLogger) {
+	ku.errorManager.addErrorLogger(logger)
 }

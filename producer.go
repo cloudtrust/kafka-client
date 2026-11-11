@@ -11,31 +11,35 @@ import (
 type Producer interface {
 	SendMessageBytes(content []byte) error
 	SendPartitionedMessageBytes(partitionKey string, content []byte) error
+	SendWithMap(content []byte, partitionKey string, details map[string]any) error
+	Send(producerMessage ProducerMessage) error
 	Close() error
 }
 
 type producer struct {
-	initialized bool
-	cluster     *cluster
-	id          string
-	enabled     bool
-	topic       *string
-	producer    sarama.SyncProducer
-	logger      Logger
+	initialized  bool
+	cluster      *cluster
+	id           string
+	enabled      bool
+	topic        *string
+	producer     sarama.SyncProducer
+	errorManager *errorManager
+	logger       Logger
 }
 
-func newProducer(cluster *cluster, producerRep KafkaProducerRepresentation, logger Logger) *producer {
+func newProducer(cluster *cluster, producerRep KafkaProducerRepresentation, errorManager *errorManager, logger Logger) *producer {
 	var enabled = true
 	if !cluster.enabled || (producerRep.Enabled != nil && !*producerRep.Enabled) {
 		enabled = false
 	}
 	return &producer{
-		initialized: false,
-		cluster:     cluster,
-		id:          *producerRep.ID,
-		enabled:     enabled,
-		topic:       producerRep.Topic,
-		logger:      logger,
+		initialized:  false,
+		cluster:      cluster,
+		id:           *producerRep.ID,
+		enabled:      enabled,
+		topic:        producerRep.Topic,
+		errorManager: errorManager,
+		logger:       logger,
 	}
 }
 
@@ -70,17 +74,27 @@ func (p *producer) SendMessageBytes(content []byte) error {
 	if !p.enabled {
 		return nil
 	}
-	msg := &sarama.ProducerMessage{Topic: *p.topic, Value: sarama.StringEncoder(content)}
-	var _, _, err = p.producer.SendMessage(msg)
-	return err
+	return p.Send(NewProducerMessage(content, nil, nil))
 }
 
 // SendPartitionedMessageBytes sends a message in the producer topic
 func (p *producer) SendPartitionedMessageBytes(partitionKey string, content []byte) error {
+	return p.Send(NewProducerMessage(content, &partitionKey, nil))
+}
+
+func (p *producer) SendWithMap(content []byte, partitionKey string, details map[string]any) error {
+	return p.Send(NewProducerMessageWithMap(content, partitionKey, details))
+}
+
+func (p *producer) Send(producerMessage ProducerMessage) error {
 	if !p.enabled {
 		return nil
 	}
-	msg := &sarama.ProducerMessage{Topic: *p.topic, Key: sarama.StringEncoder(partitionKey), Value: sarama.StringEncoder(content)}
-	var _, _, err = p.producer.SendMessage(msg)
+	saramaMessage := producerMessage.GetSaramaMessage().(*sarama.ProducerMessage)
+	saramaMessage.Topic = *p.topic
+	var _, _, err = p.producer.SendMessage(saramaMessage)
+	if err != nil {
+		p.errorManager.reportSendMessageError(context.Background(), producerMessage, err)
+	}
 	return err
 }

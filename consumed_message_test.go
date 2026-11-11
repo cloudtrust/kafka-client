@@ -18,6 +18,7 @@ func TestConsumedMessage(t *testing.T) {
 	var content = []byte("content of the consumed message modified by mappers")
 	var offset = int64(456789)
 	var partition = int32(4)
+	var partitionKey = "partitionKey"
 	var topic = "topicName"
 
 	var km = &consumedMessage{
@@ -25,6 +26,7 @@ func TestConsumedMessage(t *testing.T) {
 			Offset:    offset,
 			Partition: partition,
 			Topic:     topic,
+			Key:       []byte(partitionKey),
 		},
 		consumer: &consumer{},
 		content:  content,
@@ -38,6 +40,9 @@ func TestConsumedMessage(t *testing.T) {
 	})
 	t.Run("GetPartition", func(t *testing.T) {
 		assert.Equal(t, partition, km.GetPartition())
+	})
+	t.Run("GetPartitionKey", func(t *testing.T) {
+		assert.Equal(t, partitionKey, km.GetPartitionKey())
 	})
 	t.Run("GetTopic", func(t *testing.T) {
 		assert.Equal(t, topic, km.GetTopic())

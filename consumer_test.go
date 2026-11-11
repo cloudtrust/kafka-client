@@ -297,6 +297,7 @@ func TestConsumerGo(t *testing.T) {
 			t.Fatal("expected consumer group Consume to be called")
 		}
 
+		assert.True(t, consumer.IsEnabled())
 		assert.True(t, consumer.IsLive())
 		assert.Nil(t, consumer.Close())
 	})

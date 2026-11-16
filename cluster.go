@@ -16,10 +16,11 @@ type cluster struct {
 	brokers        []string
 	saramaConfig   *sarama.Config
 	consumerGroups map[string]sarama.ConsumerGroup
+	errorManager   *errorManager
 	logger         Logger
 }
 
-func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPrefix string, logger Logger) (*cluster, error) {
+func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPrefix string, errorManager *errorManager, logger Logger) (*cluster, error) {
 	var secret = getEnvVariable(envKeyPrefix, *conf.ID, "_CLIENT_SECRET")
 	if secret != nil {
 		conf.Security.ClientSecret = secret
@@ -41,6 +42,7 @@ func newCluster(ctx context.Context, conf KafkaClusterRepresentation, envKeyPref
 		brokers:        conf.Brokers,
 		saramaConfig:   saramaConfig,
 		consumerGroups: make(map[string]sarama.ConsumerGroup),
+		errorManager:   errorManager,
 		logger:         logger,
 	}, nil
 }
